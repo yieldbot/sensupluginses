@@ -1,2 +1,16 @@
 # diemon
 ES Handler in golang
+
+
+
+### Building
+
+These instructions assume you are on an OSX machine and you are already configured for cross-compiling.
+
+The easiest way to configure OSX for cross-compiling is using [Homebrew](http://brew.sh/). Use the following command to have everything configured from the box automatically **highly reccomended** `brew install go --cross-compile-all`. Then all you need to do is follow the below commands as examples. `-o` is the binary to output, I prefix them so I know which is which. You **must** have CGO disabled for go to build cross-platform.
+
+To build for OSX use:
+`go build -o binary.osx path/to/file.go`
+
+To build for linux use:
+`GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -o binary.linux /path/to/file.go`

@@ -12,9 +12,9 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"github/yieldbot/dhuran"
-	"github/yieldbot/dracky"
-	"gopkg.in/olivere/elastic.v2"
+	"github.com/yieldbot/dhuran"
+	"github.com/yieldbot/dracky"
+	"github.com/olivere/elastic"
 	"io/ioutil"
 	"os"
 	"time"
@@ -100,7 +100,7 @@ func main() {
 	case "user":
 		doc["product"] = user_event.Product
 		doc["data"] = user_event.Data
-		doc["timestamp"] = dracky.Set_time(user_event.Timestamp) // time.Unix(user_event.Timestamp, 0).Format(time.RFC822Z)
+		doc["timestamp"] = time.Unix(sensu_event.Check.Issued, 0).Format(time.RFC822Z) // dracky.Set_time(user_event.Timestamp)
 	default:
 		fmt.Printf("Type is not correctly set")
 		os.Exit(2)

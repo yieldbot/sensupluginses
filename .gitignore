@@ -3,6 +3,8 @@
 *.a
 *.so
 
+.vagrant
+
 # Folders
 _obj
 _test

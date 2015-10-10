@@ -33,14 +33,25 @@ EOF
 sudo mv /tmp/gopath.sh /etc/profile.d/gopath.sh
 sudo chmod 0755 /etc/profile.d/gopath.sh
 source /etc/profile.d/gopath.sh
+
+touch /home/vagrant/.ssh/config chown vagrant:vagrant /home/vagrant/.ssh/config
+chmod 600 /home/vagrant/.ssh/config
+cat << 'EOF' >> /home/vagrant/.ssh/config
+
+StrictHostKeyChecking no
+
+EOF
+#exit 0
+
 SCRIPT
 
 Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
-  config.vm.box = "chef/ubuntu-14.04"
-  config.vm.hostname = "diemon"
+  config.vm.box = 'ubuntu/trusty64'
+  config.vm.hostname = 'diemon'
 
-  config.vm.provision "shell", inline: $script, privileged: false
+  config.vm.provision 'shell', inline: $script, privileged: false
   config.vm.synced_folder '.', '/opt/gopath/src/github.com/yieldbot/diemon'
+  config.ssh.forward_agent = true
 
   config.vm.provider :virtualbox do |vb|
     vb.name = config.vm.hostname

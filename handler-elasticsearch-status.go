@@ -100,7 +100,7 @@ func main() {
 	case "user":
 		doc["product"] = user_event.Product
 		doc["data"] = user_event.Data
-		doc["timestamp"] = time.Unix(user_event.Timestamp, 0).Format(time.RFC822Z)
+		doc["timestamp"] = dracky.Set_time(user_event.Timestamp) // time.Unix(user_event.Timestamp, 0).Format(time.RFC822Z)
 	default:
 		fmt.Printf("Type is not correctly set")
 		os.Exit(2)

@@ -2,11 +2,13 @@
 #
 # This script builds the application from source for multiple platforms.
 
+# Get the name of the app you are building
+APP="$(pwd | awk -F '/' '{ print $7 }')"
+
 # Get the parent directory of where this script is.
 SOURCE="${BASH_SOURCE[0]}"
 while [ -h "$SOURCE" ] ; do SOURCE="$(readlink "$SOURCE")"; done
 DIR="$( cd -P "$( dirname "$SOURCE" )/.." && pwd )"
-
 # Change into that directory
 cd "$DIR"
 
@@ -17,8 +19,8 @@ GIT_DIRTY=$(test -n "`git status --porcelain`" && echo "+CHANGES" || true)
 # Determine the arch/os combos we're building for
 # XC_ARCH=${XC_ARCH:-"386 amd64 arm"}
 # XC_OS=${XC_OS:-linux darwin windows freebsd openbsd}
-XC_ARCH=${XC_ARCH:-"amd64"}
-XC_OS=${XC_OS:-linux}
+XC_OS=$(go env GOOS)
+XC_ARCH=$(go env GOARCH)
 
 # Get dependencies unless running in quick mode
 if [ "${TF_QUICKDEV}x" == "x" ]; then
@@ -44,14 +46,13 @@ gox \
     -os="${XC_OS}" \
     -arch="${XC_ARCH}" \
     -ldflags "-X main.GitCommit ${GIT_COMMIT}${GIT_DIRTY}" \
-    -output "pkg/{{.OS}}_{{.Arch}}/diemon-{{.Dir}}" \
+    -output "pkg/{{.OS}}_{{.Arch}}/${APP}-{{.Dir}}" \
     ./...
 
-# Make sure "terraform-terraform" is renamed properly
+# Make sure "$app-$app" is renamed properly
 for PLATFORM in $(find ./pkg -mindepth 1 -maxdepth 1 -type d); do
     set +e
-    #mv ${PLATFORM}/terraform-terraform.exe ${PLATFORM}/terraform.exe 2>/dev/null
-    mv ${PLATFORM}/diemon-diemon ${PLATFORM}/diemon 2>/dev/null
+    mv ${PLATFORM}/${APP}-${APP} ${PLATFORM}/${APP} 2>/dev/null
     set -e
 done
 

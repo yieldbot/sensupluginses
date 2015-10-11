@@ -1,9 +1,7 @@
 # diemon
 ES Handler in golang
 
-
-
-### Building
+### Building (w/o Vagrant)
 
 These instructions assume you are on an OSX machine and you are already configured for cross-compiling.
 
@@ -14,3 +12,13 @@ To build for OSX use:
 
 To build for linux use:
 `GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -o binary.linux /path/to/file.go`
+
+### Building (w/ Vagrant)
+
+`vagrant up`
+`vagrant ssh`
+
+`cd /opt/gopath/github.com/yieldbot/diemon`
+`make release`
+
+the binary will be in *./bin* and the zip file will be in *./pkg*. Currently this will only build for linx/amd64 but you can call gox with any range of os and arch options. Use `gox --help` for all available choices.

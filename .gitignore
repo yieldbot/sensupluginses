@@ -3,9 +3,10 @@
 *.a
 *.so
 
-.vagrant
-
 # Folders
+.vagrant
+bin
+pkg
 _obj
 _test
 

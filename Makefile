@@ -16,7 +16,7 @@ quickdev: generate
 	@TF_QUICKDEV=1 TF_DEV=1 sh -c "'$(CURDIR)/scripts/build.sh'"
 
 release: updatedeps
-	gox -osarch="linux/amd64" 
+	gox -osarch="linux/amd64"
 	@$(MAKE) bin
 
 # test runs the unit tests and vets the code
@@ -41,7 +41,6 @@ testrace: generate
 # and build.
 updatedeps:
 	go get -u github.com/mitchellh/gox
-	# go get -u golang.org/x/tools/cmd/stringer
 	go list ./... \
 		| xargs go list -f '{{join .Deps "\n"}}' \
 		| grep -v github.com/hashicorp/terraform \

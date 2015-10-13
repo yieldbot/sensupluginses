@@ -21,4 +21,4 @@ To build for linux use:
 `cd /opt/gopath/github.com/yieldbot/diemon`
 `make release`
 
-the binary will be in *./bin* and the zip file will be in *./pkg*. Currently this will only build for linx/amd64 but you can call gox with any range of os and arch options. Use `gox --help` for all available choices.
+the binary will be in *./bin* and the zip file will be in *./pkg*. Currently this will only build for linux/amd64 but you can call gox with any range of os and arch options. Use `gox --help` for all available choices.

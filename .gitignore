@@ -9,6 +9,7 @@ bin
 pkg
 _obj
 _test
+target
 
 # Architecture specific extensions/prefixes
 *.[568vq]

@@ -8,6 +8,6 @@
     ""
   ],
   "version": [
-    ""
+    "cat version.txt"
   ]
 }

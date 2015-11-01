@@ -76,7 +76,7 @@ func main() {
 	}
 
 	// Check to see if the index exists and if not create it
-	if client.IndexExists == nil {
+	if client.IndexExists == nil { // need to test to make sure this does what I want
 		_, err = client.CreateIndex(es_index).Do()
 		if err != nil {
 			dhuran.Check(err)

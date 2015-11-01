@@ -15,7 +15,7 @@ bin: generate
 # quickdev: generate
 # 	@TF_QUICKDEV=1 TF_DEV=1 sh -c "'$(CURDIR)/scripts/build.sh'"
 
-release: vet updatedeps
+release: updatedeps
 	gox -osarch="linux/amd64"
 	@$(MAKE) bin
 

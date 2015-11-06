@@ -91,7 +91,7 @@ func main() {
 		doc_id = dracky.Event_name(sensu_event.Client.Name, sensu_event.Check.Name)
 		doc["monitored_instance"] = sensu_event.Acquire_monitored_instance()
 		doc["sensu_client"] = sensu_event.Client.Name
-		doc["incident_timestamp"] = time.Unix(sensu_event.Check.Issued, 0).Format(time.RFC822Z)
+		doc["incident_timestamp"] = time.Unix(sensu_event.Check.Issued, 0).Format(time.RFC3339)
 		doc["check_name"] = dracky.Create_check_name(sensu_event.Check.Name)
 		doc["check_state"] = dracky.Define_status(sensu_event.Check.Status)
 		doc["sensu_env"] = dracky.Define_sensu_env(sensu_env.Sensu.Environment)
@@ -100,7 +100,7 @@ func main() {
 	case "user":
 		doc["product"] = user_event.Product
 		doc["data"] = user_event.Data
-		doc["timestamp"] = time.Unix(sensu_event.Check.Issued, 0).Format(time.RFC822Z) // dracky.Set_time(user_event.Timestamp)
+		doc["timestamp"] = time.Unix(sensu_event.Check.Issued, 0).Format(time.RFC3339) // dracky.Set_time(user_event.Timestamp)
 	default:
 		fmt.Printf("Type is not correctly set")
 		os.Exit(2)

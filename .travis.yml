@@ -1,3 +1,5 @@
+sudo: false
+
 language: go
 go:
   - 1.4
@@ -13,4 +15,4 @@ install:
   - make updatedeps
 
 script:
-  - make all
+  - gox -osarch="linux/amd64" -output=diemon github.com/yieldbot/diemon/src

@@ -75,7 +75,7 @@ all: format lint updatedeps build dist
 # Build a binary from the given package and drop it into the local bin
 build:
 	@for i in $$(echo $(pkg)); do \
-  	gox -osarch="$(osarch)" -output=$(output) $(pkgbase)/$$i/$(srcdir); \
+  	gox -osarch="$(osarch)" -output=$(output) github.com/yieldbot/diemon/src; \
   done; \
 
 # bump the version of the project

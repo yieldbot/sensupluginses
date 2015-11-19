@@ -1,6 +1,8 @@
 # diemon
 ES Handler in golang
 
+[![Build Status][travis-image]][travis-url] [![Coverage][coverage-image]][coverage-url] [![GoDoc][godoc-image]][godoc-url] [![Release][release-image]][release-url]
+
 ### Building (w/o Vagrant)
 
 These instructions assume you are on an OSX machine and you are already configured for cross-compiling.
@@ -22,3 +24,14 @@ To build for linux use:
 `make release`
 
 the binary will be in *./bin* and the zip file will be in *./pkg*. Currently this will only build for linux/amd64 but you can call gox with any range of os and arch options. Use `gox --help` for all available choices.
+
+[travis-url]: https://travis-ci.org/yieldbot/diemon
+[travis-image]: https://travis-ci.org/yieldbot/diemon.svg?branch=master
+
+[godoc-url]: https://godoc.org/github.com/yieldbot/diemon
+[godoc-image]: https://godoc.org/github.com/yieldbot/diemon?status.svg
+
+[release-url]: https://github.com/yieldbot/diemon/releases/tag/v1.0.3
+[release-image]: https://img.shields.io/badge/release-v1.0.3-blue.svg
+
+[coverage-url]: https://coveralls.io/github/yieldbot/diemon?branch=master

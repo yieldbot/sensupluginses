@@ -97,7 +97,7 @@ coverage:
 # pack everything up neatly
 dist: build
 	mkdir -p ./target
-	tar -czvpf $(target_path)/$(pkg).tgz $$GOPATH/src/$(pkgbase)/$(pkg)/bin/*
+	tar czvpf $(target_path)/$(pkg).tgz $$GOPATH/src/$(pkgbase)/$(pkg)/bin/*
 
 # run the golang formatting tool on all files in the current src directory
 format:

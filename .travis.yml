@@ -12,7 +12,7 @@ before_install:
   - go get github.com/mitchellh/gox
 
 install:
-  - make update_deps
+  - make updatedeps
 
 script:
   - make all

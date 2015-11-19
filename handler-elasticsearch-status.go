@@ -12,7 +12,6 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"github.com/yieldbot/"
 	"github.com/yieldbot/dracky"
 	"github.com/olivere/elastic"
 	"io/ioutil"

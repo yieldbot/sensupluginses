@@ -12,7 +12,7 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"github.com/yieldbot/dhuran"
+	"github.com/yieldbot/"
 	"github.com/yieldbot/dracky"
 	"github.com/olivere/elastic"
 	"io/ioutil"
@@ -53,11 +53,11 @@ func main() {
 	if (rd_stdin == false) && (input_file != "") {
 		user_input, err := ioutil.ReadFile(input_file)
 		if err != nil {
-			dhuran.Check(err)
+			dracky.Check(err)
 		}
 		err = json.Unmarshal(user_input, &user_event)
 		if err != nil {
-			dhuran.Check(err)
+			dracky.Check(err)
 		}
 		es_type = "user"
 	} else if (rd_stdin == false) && (input_file == "") {
@@ -72,14 +72,14 @@ func main() {
 		elastic.SetURL("http://" + es_host + ":" + es_port),
 	)
 	if err != nil {
-		dhuran.Check(err)
+		dracky.Check(err)
 	}
 
 	// Check to see if the index exists and if not create it
 	if client.IndexExists == nil { // need to test to make sure this does what I want
 		_, err = client.CreateIndex(es_index).Do()
 		if err != nil {
-			dhuran.Check(err)
+			dracky.Check(err)
 		}
 	}
 
@@ -114,7 +114,7 @@ func main() {
 		BodyJson(doc).
 		Do()
 	if err != nil {
-		dhuran.Check(err)
+		dracky.Check(err)
 	}
 
 	// Log a successful document push to stdout. I don't add the id here as some id's are fixed but

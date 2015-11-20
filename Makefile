@@ -77,6 +77,7 @@ build:
 	for i in $$(echo $(pkg)); do \
   	gox -osarch="$(osarch)" -output=$(output) $(pkgbase)/$$i/$(srcdir); \
   done; \
+	ls ./bin
 
 # bump the version of the project
 bump_version:
@@ -100,7 +101,7 @@ dist: build
 
 # run the golang formatting tool on all files in the current src directory
 format:
-	@gofmt -w $(srcdir)/*.go
+	OUT=`gofmt -l .`; if [ "$$OUT" ]; then echo $$OUT; exit 1; fi
 
 # install the binary and any info docs locally for testing
 install:
@@ -125,7 +126,7 @@ info:
 
 # run the golang linting tool
 lint:
-	@golint $$GOPATH/src/$(pkgbase)/$(pkg)/$(srcdir)/*.go
+	OUT=`golint ./...`; if [ "$$OUT" ]; then echo $$OUT; exit 1; fi
 
 maintainer-clean:
 	@echo "this needs to be implemented"
@@ -155,4 +156,4 @@ version:
 
 # run go vet
 vet:
-	@echo "this needs to be implemented"
+	go vet ./...

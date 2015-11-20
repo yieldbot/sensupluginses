@@ -1,5 +1,5 @@
 SHELL = /bin/sh
-.PHONY: all build bump_version clean coverage dist format help install lint maintainer-clean test test_all updatedeps version vet
+.PHONY: all build bump_version clean coverage dist format info install lint maintainer-clean test test_all updatedeps version vet
 
 # We only care about golang and texinfo files at the moment so clear and explictly denote that
 .SUFFIXES:
@@ -73,8 +73,7 @@ default: all
 all: format lint updatedeps build dist
 
 # Build a binary from the given package and drop it into the local bin
-build:
-	mkdir -p ./bin
+build: pre-build
 	for i in $$(echo $(pkg)); do \
   	gox -osarch="$(osarch)" -output=$(output) $(pkgbase)/$$i/$(srcdir); \
   done; \
@@ -95,14 +94,16 @@ coverage:
 	@echo "this needs to be implemented"
 
 # pack everything up neatly
-dist: build
-	mkdir -p ./target
+dist: build pre-dist
 	tar czvf $(target_path)/$(pkg).tgz $$GOPATH/src/$(pkgbase)/$(pkg)/bin/*
-	ls ./target
 
 # run the golang formatting tool on all files in the current src directory
 format:
 	@OUT=`gofmt -l .`; if [ "$$OUT" ]; then echo $$OUT; exit 1; fi
+
+# fix any detected formatting issues
+format_correct:
+	@gofmt -w .
 
 # install the binary and any info docs locally for testing
 install:
@@ -130,6 +131,18 @@ lint:
 	@OUT=`golint ./...`; if [ "$$OUT" ]; then echo $$OUT; exit 1; fi
 
 maintainer-clean:
+	@echo "this needs to be implemented"
+
+pre-build:
+	mkdir -p ./bin
+
+post-build:
+	@echo "this needs to be implemented"
+
+pre-dist:
+	mkdir -p ./$(target_path)
+
+post-dist:
 	@echo "this needs to be implemented"
 
 # run unit tests and anything else testing wise needed

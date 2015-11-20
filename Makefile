@@ -73,11 +73,10 @@ default: all
 all: format lint updatedeps build dist
 
 # Build a binary from the given package and drop it into the local bin
-# $(pkgbase)/$$i/$(srcdir)
 build:
 	mkdir -p ./bin
 	for i in $$(echo $(pkg)); do \
-  	gox -osarch="$(osarch)" -output=$(output) github.com/diemon/src; \
+  	gox -osarch="$(osarch)" -output=$(output) $(pkgbase)/$$i/$(srcdir); \
   done; \
 	ls ./bin
 

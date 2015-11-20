@@ -19,4 +19,4 @@ script:
   - make format
   - make lint
   - make vet
-  - make build
+  - make pkgbase=github.com/yieldbot build

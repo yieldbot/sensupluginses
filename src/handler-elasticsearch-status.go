@@ -13,7 +13,7 @@ import (
 	"flag"
 	"fmt"
 	"github.com/olivere/elastic"
-	"github.com/yieldbot/dracky"
+	"github.com/yieldbot/dracky/src"
 	"io/ioutil"
 	"os"
 	"time"
@@ -22,53 +22,53 @@ import (
 func main() {
 
 	// set commandline flags
-	es_indexPtr := flag.String("index", dracky.STATUS_ES_INDEX, "the elasticsearch index to use")
-	es_hostPtr := flag.String("host", dracky.DEFAULT_ES_HOST, "the elasticsearch host")
-	es_portPtr := flag.String("port", dracky.DEFAULT_ES_PORT, "the elasticsearch port")
+	esIndexPtr := flag.String("index", dracky.StatusEsIndex, "the elasticsearch index to use")
+	esHostPtr := flag.String("host", dracky.DefaultEsHost, "the elasticsearch host")
+	esPortPtr := flag.String("port", dracky.DefaultEsPort, "the elasticsearch port")
 	stdinPtr := flag.Bool("read-stdin", true, "read input from stdin")
 	//timePtr := flag.string("t-format", "", "time format to suffix on the index name")
-	input_filePtr := flag.String("input-file", "", "file to read json in from, check docs for proper format")
+	inputFilePtr := flag.String("input-file", "", "file to read json in from, check docs for proper format")
 
 	flag.Parse()
-	es_index := *es_indexPtr
-	es_type := dracky.DEFAULT_ES_TYPE
-	es_host := *es_hostPtr
-	es_port := *es_portPtr
-	rd_stdin := *stdinPtr
-	input_file := *input_filePtr
+	esIndex := *esIndexPtr
+	esType := dracky.DefaultEsType
+	esHost := *esHostPtr
+	esPort := *esPortPtr
+	rdStdin := *stdinPtr
+	inputFile := *inputFilePtr
 
 	// I don't want to call these if they are not needed
-	sensu_event := new(dracky.Sensu_Event)
-	user_event := new(dracky.User_Event)
+	sensuEvent := new(dracky.SensuEvent)
+	userEvent := new(dracky.UserEvent)
 	//t_format := *timePtr
 
-	sensu_env := dracky.Set_sensu_env()
+	sensuEnv := dracky.SetSensuEnv()
 
 	//   if t_format != "" {
 	//     // get the format of the time
-	//     es_index = es_index + t_format
+	//     esIndex = esIndex + t_format
 	//   }
 
-	if (rd_stdin == false) && (input_file != "") {
-		user_input, err := ioutil.ReadFile(input_file)
+	if (rdStdin == false) && (inputFile != "") {
+		userInput, err := ioutil.ReadFile(inputFile)
 		if err != nil {
 			dracky.Check(err)
 		}
-		err = json.Unmarshal(user_input, &user_event)
+		err = json.Unmarshal(userInput, &userEvent)
 		if err != nil {
 			dracky.Check(err)
 		}
-		es_type = "user"
-	} else if (rd_stdin == false) && (input_file == "") {
+		esType = "user"
+	} else if (rdStdin == false) && (inputFile == "") {
 		fmt.Printf("Please enter a file to read from")
 		os.Exit(1)
 	} else {
-		sensu_event = sensu_event.Acquire_sensu_event()
+		sensuEvent = sensuEvent.AcquireSensuEvent()
 	}
 
 	// Create a client
 	client, err := elastic.NewClient(
-		elastic.SetURL("http://" + es_host + ":" + es_port),
+		elastic.SetURL("http://" + esHost + ":" + esPort),
 	)
 	if err != nil {
 		dracky.Check(err)
@@ -76,7 +76,7 @@ func main() {
 
 	// Check to see if the index exists and if not create it
 	if client.IndexExists == nil { // need to test to make sure this does what I want
-		_, err = client.CreateIndex(es_index).Do()
+		_, err = client.CreateIndex(esIndex).Do()
 		if err != nil {
 			dracky.Check(err)
 		}
@@ -84,22 +84,22 @@ func main() {
 
 	// Create an Elasticsearch document. The document type will define the mapping used for the document.
 	doc := make(map[string]string)
-	var doc_id string
-	switch es_type {
+	var docID string
+	switch esType {
 	case "sensu":
-		doc_id = dracky.Event_name(sensu_event.Client.Name, sensu_event.Check.Name)
-		doc["monitored_instance"] = sensu_event.Acquire_monitored_instance()
-		doc["sensu_client"] = sensu_event.Client.Name
-		doc["incident_timestamp"] = time.Unix(sensu_event.Check.Issued, 0).Format(time.RFC3339)
-		doc["check_name"] = dracky.Create_check_name(sensu_event.Check.Name)
-		doc["check_state"] = dracky.Define_status(sensu_event.Check.Status)
-		doc["sensu_env"] = dracky.Define_sensu_env(sensu_env.Sensu.Environment)
-		doc["instance_address"] = sensu_event.Client.Address
-		doc["check_state_duration"] = dracky.Define_check_state_duration()
+		docID = dracky.EventName(sensuEvent.Client.Name, sensuEvent.Check.Name)
+		doc["monitored_instance"] = sensuEvent.AcquireMonitoredInstance()
+		doc["sensu_client"] = sensuEvent.Client.Name
+		doc["incident_timestamp"] = time.Unix(sensuEvent.Check.Issued, 0).Format(time.RFC3339)
+		doc["check_name"] = dracky.CreateCheckName(sensuEvent.Check.Name)
+		doc["check_state"] = dracky.DefineStatus(sensuEvent.Check.Status)
+		doc["sensuEnv"] = dracky.DefineSensuEnv(sensuEnv.Sensu.Environment)
+		doc["instance_address"] = sensuEvent.Client.Address
+		doc["check_state_duration"] = dracky.DefineCheckStateDuration()
 	case "user":
-		doc["product"] = user_event.Product
-		doc["data"] = user_event.Data
-		doc["timestamp"] = time.Unix(sensu_event.Check.Issued, 0).Format(time.RFC3339) // dracky.Set_time(user_event.Timestamp)
+		doc["product"] = userEvent.Product
+		doc["data"] = userEvent.Data
+		doc["timestamp"] = time.Unix(sensuEvent.Check.Issued, 0).Format(time.RFC3339) // dracky.Set_time(userEvent.Timestamp)
 	default:
 		fmt.Printf("Type is not correctly set")
 		os.Exit(2)
@@ -107,9 +107,9 @@ func main() {
 
 	// Add a document to the Elasticsearch index
 	_, err = client.Index().
-		Index(es_index).
-		Type(es_type).
-		Id(doc_id).
+		Index(esIndex).
+		Type(esType).
+		Id(docID).
 		BodyJson(doc).
 		Do()
 	if err != nil {

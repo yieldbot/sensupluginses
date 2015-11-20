@@ -19,3 +19,4 @@ script:
   - make format
   - make lint
   - make vet
+  - make build

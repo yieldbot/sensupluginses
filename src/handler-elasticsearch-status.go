@@ -75,7 +75,7 @@ func main() {
 	}
 
 	// Check to see if the index exists and if not create it
-	if client.IndexExists == nil { // need to test to make sure this does what I want
+	if client.IndexExists == "" { // need to test to make sure this does what I want
 		_, err = client.CreateIndex(esIndex).Do()
 		if err != nil {
 			dracky.Check(err)

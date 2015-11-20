@@ -76,10 +76,10 @@ func main() {
 
 	// Check to see if the index exists and if not create it
 	if client.IndexExists(esIndex) == nil { // need to test to make sure this does what I want
-  	_, err = client.CreateIndex(esIndex).Do()
-  	if err != nil {
-  		dracky.Check(err)
-  	}
+		_, err = client.CreateIndex(esIndex).Do()
+		if err != nil {
+			dracky.Check(err)
+		}
 	}
 
 	// Create an Elasticsearch document. The document type will define the mapping used for the document.

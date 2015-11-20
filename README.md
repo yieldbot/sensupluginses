@@ -1,7 +1,7 @@
 # diemon
 ES Handler in golang
 
-[![Build Status][travis-image]][travis-url] [![Coverage][coverage-image]][coverage-url] [![GoDoc][godoc-image]][godoc-url] [![Release][release-image]][release-url]
+[![Build Status][travis-image]][travis-url]
 
 ### Building (w/o Vagrant)
 
@@ -27,11 +27,3 @@ the binary will be in *./bin* and the zip file will be in *./pkg*. Currently thi
 
 [travis-url]: https://travis-ci.org/yieldbot/diemon
 [travis-image]: https://travis-ci.org/yieldbot/diemon.svg?branch=master
-
-[godoc-url]: https://godoc.org/github.com/yieldbot/diemon
-[godoc-image]: https://godoc.org/github.com/yieldbot/diemon?status.svg
-
-[release-url]: https://github.com/yieldbot/diemon/releases/tag/v1.0.3
-[release-image]: https://img.shields.io/badge/release-v1.0.3-blue.svg
-
-[coverage-url]: https://coveralls.io/github/yieldbot/diemon?branch=master

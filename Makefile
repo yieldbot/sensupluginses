@@ -78,7 +78,6 @@ build:
 	for i in $$(echo $(pkg)); do \
   	gox -osarch="$(osarch)" -output=$(output) $(pkgbase)/$$i/$(srcdir); \
   done; \
-	ls ./bin
 
 # bump the version of the project
 bump_version:
@@ -99,6 +98,7 @@ coverage:
 dist: build
 	mkdir -p ./target
 	tar czvf $(target_path)/$(pkg).tgz $$GOPATH/src/$(pkgbase)/$(pkg)/bin/*
+	ls ./target
 
 # run the golang formatting tool on all files in the current src directory
 format:

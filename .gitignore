@@ -10,6 +10,7 @@ pkg
 _obj
 _test
 target
+.idea
 
 # Architecture specific extensions/prefixes
 *.[568vq]

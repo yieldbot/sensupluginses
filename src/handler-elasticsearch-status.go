@@ -1,4 +1,4 @@
-// Take well-formed json from either stdin or an input file and create an elasticsearch document to be used to
+// Take well-formed json from stdin and create an elasticsearch document to be used to
 // generate user specific dashboards or highly contextual alerts.
 //
 // LICENSE:
@@ -52,8 +52,13 @@ func main() {
 		}
 	}
 
+	s := make([]string, 5)
+	s[0] = "x"
+	s[1] = "y"
+	s[2] = "z"
+
 	// Create an Elasticsearch document. The document type will define the mapping used for the document.
-	doc := make(map[string]string)
+	doc := make(map[string]interface{})
 	var docID string
 	docID = dracky.EventName(sensuEvent.Client.Name, sensuEvent.Check.Name)
 	doc["monitored_instance"] = sensuEvent.AcquireMonitoredInstance()
@@ -62,8 +67,11 @@ func main() {
 	doc["check_name"] = dracky.CreateCheckName(sensuEvent.Check.Name)
 	doc["check_state"] = dracky.DefineStatus(sensuEvent.Check.Status)
 	doc["sensuEnv"] = dracky.DefineSensuEnv(sensuEnv.Sensu.Environment)
+	doc["tags"] = s
 	doc["instance_address"] = sensuEvent.Client.Address
 	doc["check_state_duration"] = dracky.DefineCheckStateDuration()
+
+	// fmt.Printf("%v", doc)
 
 	// Add a document to the Elasticsearch index
 	_, err = client.Index().

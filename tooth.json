@@ -1,7 +1,7 @@
 {
   "coordinates": {
     "org": "com.yieldbot.devops",
-    "name": "diemon",
+    "name": "sensu-yieldbot-handler-elasticsearch",
     "type": "deployable"
   },
   "build": [

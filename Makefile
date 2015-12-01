@@ -163,7 +163,8 @@ updatedeps:
 # print out the current version of the project
 version:
 	@if [ -e version ]; then \
-	  awk '{ print $$NF }' version; \
+		ver=$$(awk '{ print $$NF }' version) ;\
+    echo "{\"version\":\"$$ver\"}"; \
 	else \
 		@echo "No version file found in the project root"; \
 	fi; \

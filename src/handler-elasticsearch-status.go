@@ -12,7 +12,7 @@ import (
 	"flag"
 	"fmt"
 	"github.com/olivere/elastic"
-	"github.com/yieldbot/dracky/src"
+	dracky "github.com/yieldbot/sensu-yieldbot-library/src"
 	"time"
 )
 
@@ -32,7 +32,6 @@ func main() {
 	sensuEvent := new(dracky.SensuEvent)
 
 	sensuEnv := dracky.SetSensuEnv()
-
 	sensuEvent = sensuEvent.AcquireSensuEvent()
 
 	// Create a client

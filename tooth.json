@@ -10,9 +10,6 @@
   "version": [
     "make version"
   ],
-  "version": [
-    "make clean"
-  ],
   "bump": [
     "make bump_version"
   ]

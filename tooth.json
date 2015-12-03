@@ -11,6 +11,9 @@
     "make version"
   ],
   "bump": [
-    "make bump_version"
+    "make version_bump"
+  ],
+  "clean": [
+    "make clean"
   ]
 }

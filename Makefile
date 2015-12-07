@@ -1,4 +1,10 @@
 SHELL = /bin/sh
+
+# This is a gernal purpose Makefile for building golang projects
+#
+# version 0.0.2
+# Copyright (c) 2015 Yieldbot
+
 .PHONY: all build bump_version clean coverage dist format info install lint maintainer-clean test test_all updatedeps version vet
 
 # We only care about golang and texinfo files at the moment so clear and explictly denote that
@@ -253,10 +259,7 @@ test_all:
 
 # update all deps to the latest versions available
 updatedeps:
-	@go list ./... \
-		| xargs go list -f '{{join .Deps "\n"}}' \
-		| sort -u \
-		| xargs go get -f -u -v
+	@./scripts/pull_repos.sh
 
 # print out the current version of the project
 version:

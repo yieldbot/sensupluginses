@@ -11,8 +11,8 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/olivere/elastic"
-	"github.com/yieldbot/ybsensu/handler"
+	"github.com/yieldbot/sensu-yieldbot-handler-slack/Godeps/_workspace/src/github.com/olivere/elastic"
+	"github.com/yieldbot/sensu-yieldbot-handler-slack/Godeps/_workspace/src/github.com/yieldbot/ybsensu/handler"
 	"time"
 )
 

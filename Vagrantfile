@@ -1,6 +1,8 @@
 # -*- mode: ruby -*-
 # vi: set ft=ruby :
 
+# version 0.0.1
+
 # Vagrantfile API/syntax version. Don't touch unless you know what you're doing!
 VAGRANTFILE_API_VERSION = '2'
 
@@ -36,6 +38,7 @@ sudo chmod 0755 /etc/profile.d/gopath.sh
 source /etc/profile.d/gopath.sh
 touch /home/vagrant/.ssh/config chown vagrant:vagrant /home/vagrant/.ssh/config
 chmod 600 /home/vagrant/.ssh/config
+go get github.com/axw/gocov/gocov
 go get -u github.com/golang/lint/golint
 go get github.com/mitchellh/gox
 cat << 'EOF' >> /home/vagrant/.ssh/config

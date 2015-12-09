@@ -259,7 +259,10 @@ test_all:
 
 # update all deps to the latest versions available
 updatedeps:
-	@./scripts/pull_repos.sh
+	@go list ./... \
+		| xargs go list -f '{{join .Deps "\n"}}' \
+		| sort -u \
+		| xargs go get -f -u -v
 
 # print out the current version of the project
 version:

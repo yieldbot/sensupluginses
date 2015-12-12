@@ -1,7 +1,7 @@
 # -*- mode: ruby -*-
 # vi: set ft=ruby :
 
-# version 0.0.2
+# version 0.0.4
 
 # Vagrantfile API/syntax version. Don't touch unless you know what you're doing!
 VAGRANTFILE_API_VERSION = '2'
@@ -40,6 +40,7 @@ touch /home/vagrant/.ssh/config chown vagrant:vagrant /home/vagrant/.ssh/config
 chmod 600 /home/vagrant/.ssh/config
 go get github.com/axw/gocov/gocov
 go get -u github.com/golang/lint/golint
+go get github.com/tools/godep
 go get github.com/mitchellh/gox
 cat << 'EOF' >> /home/vagrant/.ssh/config
 StrictHostKeyChecking no
@@ -49,10 +50,10 @@ SCRIPT
 
 Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   config.vm.box = 'ubuntu/trusty64'
-  config.vm.hostname = 'sensu-yieldbot-handler-slack'
+  config.vm.hostname = 'ybsensues'
 
   config.vm.provision 'shell', inline: $script, privileged: false
-  config.vm.synced_folder '.', '/opt/gopath/src/github.com/yieldbot/sensu-yieldbot-handler-slack'
+  config.vm.synced_folder '.', '/opt/gopath/src/github.com/yieldbot/ybsensues'
   config.ssh.forward_agent = true
 
   config.vm.provider :virtualbox do |vb|

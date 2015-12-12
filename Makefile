@@ -2,7 +2,7 @@ SHELL = /bin/sh
 
 # This is a gernal purpose Makefile for building golang projects
 #
-# version 0.0.2
+# version 0.0.5
 # Copyright (c) 2015 Yieldbot
 
 .PHONY: all build bump_version clean coverage dist format info install lint maintainer-clean test test_all updatedeps version vet
@@ -28,7 +28,7 @@ endif
 # Set the src directory. You can overwrite this by setting your build command
 # to `make srcdir=path build`
 ifndef srcdir
-srcdir = src
+srcdir = cmd
 endif
 
 # Set the default os/arch to build for. Specify additional values in a space
@@ -78,10 +78,6 @@ endif
 ifndef destdir
 destdir = /usr/local/bin
 endif
-
-# Set the base directory that we can work from. It needs to go at the end to
-# all the paths have been resolved correctly
-base = $$GOPATH/src/$(pkgbase)/$(repo)
 
 define help
 --Targets--
@@ -150,7 +146,7 @@ osarch Set the default os/arch to build for. Specify additional values in a spac
        Default: linux/amd64
 
 pkgbase Set the base package location.
-        Ex. `make pkgbase="github.com yieldbot" build
+        Ex. `make pkgbase="github.com/yieldbot" build
         Default: github.com
 
 repo Set the repo to look for the package in. Specify additional values in a space
@@ -180,16 +176,13 @@ all: format lint updatedeps build dist
 
 # Build a binary from the given package and drop it into the local bin
 build: pre-build
-	for i in $$(echo $(pkg)); do \
+	@for i in $$(echo $(pkg)); do \
   	gox -osarch="$(osarch)" -output=$(output) ./$(srcdir)/$$i; \
   done; \
 
 # delete all existing binaries and directories used for building
 clean:
-	@for i in $$(echo $(repo)); do \
-  	cd $(base); \
-		rm -rf ./bin ./$(targetdir); \
-  done; \
+		rm -rf ./bin ./$(targetdir)
 
 # run the golang coverage tool
 coverage:
@@ -198,23 +191,23 @@ coverage:
 # pack everything up neatly
 dist: build pre-dist
 	for i in $$(echo $(pkg)); do \
-  	cd $(base)/bin/$(pkg); \
+  	cd ./bin/$(pkg); \
 		tar czvf ../../$(targetdir)/$(repo).tgz *; \
   done; \
 
 # run the golang formatting tool on all files in the current src directory
 format:
-	OUT=`gofmt -l ./src/($pkg)/*.go`; if [ "$$OUT" ]; then echo $$OUT; exit 1; fi
+	@OUT=`gofmt -l ./$(srcdir)/$(pkg)/*.go`; if [ "$$OUT" ]; then echo $$OUT; exit 1; fi
 
 # fix any detected formatting issues
 format_correct:
-	@gofmt -w .
+	@gofmt -w ./$(srcdir)/$(pkg)/*.go
 
 # install the binary and any info docs locally for testing
 install:
-	@if [ -e $(base)/bin/* ]; then \
+	@if [ -e ./bin/* ]; then \
 	  mkdir -p $(destdir); \
-	  cp $(base)/bin/$(pkg)/* $(destdir); \
+	  cp ./bin/$(pkg)/* $(destdir); \
 	else \
 		echo "Nothing to install, no binaries were found in ./bin/"; \
 	fi; \
@@ -237,17 +230,17 @@ help:
 
 # run the golang linting tool
 lint:
-	@OUT=`golint ./...`; if [ "$$OUT" ]; then echo $$OUT; exit 1; fi
+	@OUT=`golint ./$(srcdir)/$(pkg)/*.go`; if [ "$$OUT" ]; then echo $$OUT; exit 1; fi
 
 maintainer-clean:
 	@echo "this needs to be implemented"
 
 # create a directory to store binaries in
 pre-build:
-	mkdir -p ./bin/$(pkg)
+	@mkdir -p ./bin/$(pkg)
 
 pre-dist:
-	mkdir -p ./$(targetdir)
+	@mkdir -p ./$(targetdir)
 
 # run unit tests and anything else testing wise needed
 test:
@@ -281,4 +274,4 @@ version_bump:
 
 # run go vet
 vet:
-	@go vet ./...
+	@go vet ./$(srcdir)/$(pkg)/*.go

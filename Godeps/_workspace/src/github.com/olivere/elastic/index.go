@@ -9,7 +9,7 @@ import (
 	"fmt"
 	"net/url"
 
-	"github.com/yieldbot/sensu-yieldbot-handler-slack/Godeps/_workspace/src/github.com/olivere/elastic/uritemplates"
+	"github.com/yieldbot/ybsensues/Godeps/_workspace/src/github.com/olivere/elastic/uritemplates"
 )
 
 // IndexResult is the result of indexing a document in Elasticsearch.

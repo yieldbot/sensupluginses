@@ -1,5 +1,5 @@
 {
-	"ImportPath": "github.com/yieldbot/sensu-yieldbot-handler-slack",
+	"ImportPath": "github.com/yieldbot/ybsensues",
 	"GoVersion": "go1.5.1",
 	"Packages": [
 		"./..."
@@ -12,7 +12,13 @@
 		},
 		{
 			"ImportPath": "github.com/yieldbot/ybsensu/handler",
-			"Rev": "334c2eca9de96531099f93f3532faa8381795a86"
+			"Comment": "v1.0.0-6-g627f9d6",
+			"Rev": "627f9d62826a164c670263065d3768004cb5ec7f"
+		},
+		{
+			"ImportPath": "github.com/yieldbot/ybsensu/util",
+			"Comment": "v1.0.0-6-g627f9d6",
+			"Rev": "627f9d62826a164c670263065d3768004cb5ec7f"
 		},
 		{
 			"ImportPath": "gopkg.in/olivere/elastic.v2/uritemplates",

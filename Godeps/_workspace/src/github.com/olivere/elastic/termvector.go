@@ -10,7 +10,7 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/yieldbot/sensu-yieldbot-handler-slack/Godeps/_workspace/src/gopkg.in/olivere/elastic.v2/uritemplates"
+	"github.com/yieldbot/ybsensues/Godeps/_workspace/src/gopkg.in/olivere/elastic.v2/uritemplates"
 )
 
 // TermvectorService returns information and statistics on terms in the

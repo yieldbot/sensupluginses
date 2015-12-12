@@ -11,7 +11,7 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/yieldbot/sensu-yieldbot-handler-slack/Godeps/_workspace/src/github.com/olivere/elastic/uritemplates"
+	"github.com/yieldbot/ybsensues/Godeps/_workspace/src/github.com/olivere/elastic/uritemplates"
 )
 
 const (

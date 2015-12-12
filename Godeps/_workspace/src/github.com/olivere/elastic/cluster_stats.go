@@ -10,7 +10,7 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/yieldbot/sensu-yieldbot-handler-slack/Godeps/_workspace/src/github.com/olivere/elastic/uritemplates"
+	"github.com/yieldbot/ybsensues/Godeps/_workspace/src/github.com/olivere/elastic/uritemplates"
 )
 
 // ClusterStatsService is documented at http://www.elasticsearch.org/guide/en/elasticsearch/reference/1.4/cluster-stats.html.

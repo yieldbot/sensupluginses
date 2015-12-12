@@ -1,16 +1,17 @@
-// Library for all functions used by the Yieldbot Infrastructure teams
+// Library for all handler functions used by the Yieldbot Infrastructure
+// teams in sensu.
 //
 // LICENSE:
 //   Copyright 2015 Yieldbot. <devops@yieldbot.com>
 //   Released under the MIT License; see LICENSE
 //   for details.
 
-// Package dracky implements common data structures and functions for Yieldbot monitoring alerts and dashboards
+// Package handler implements common data structures and functions for Yieldbot monitoring alerts and dashboards
 package handler
 
 import (
 	"encoding/json"
-	"fmt"
+	"github.com/yieldbot/ybsensues/Godeps/_workspace/src/github.com/yieldbot/ybsensu/util"
 	"io/ioutil"
 	"os"
 	"strings"
@@ -21,16 +22,16 @@ func EventName(client string, check string) string {
 	return client + "_" + check
 }
 
-// AcquireMonitoredInstance sets the correct device that is being monitored. In the case of snmp trap collection, containers, or applicance
-// monitoring the device running the sensu-client may not be the device actually being monitored.
+// AcquireMonitoredInstance sets the correct device that is being monitored. In the case of snmp trap collection, containers,
+// or applicance monitoring the device running the sensu-client may not be the device actually being monitored.
 func (e SensuEvent) AcquireMonitoredInstance() string {
-	var monitoredInstance string
+	// var monitoredInstance string
 	if e.Check.Source != "" {
-		monitoredInstance = e.Check.Source
+		return e.Check.Source
 	} else {
-		monitoredInstance = e.Client.Name
+		return e.Client.Name
 	}
-	return monitoredInstance
+	// return monitoredInstance
 }
 
 // func Set_time(t int) string {
@@ -72,6 +73,8 @@ func DefineStatus(status int) string {
 		return "PERMISSION DENIED"
 	case 127:
 		return "CONFIG ERROR"
+	case 129:
+		return "GENERAL GOLANG ERROR"
 	default:
 		return "UNKNOWN"
 	}
@@ -80,8 +83,8 @@ func DefineStatus(status int) string {
 // CreateCheckName creates a monitor name that is easliy searchable in ES using different
 // levels of granularity.
 func CreateCheckName(check string) string {
-	fmtdCheck := strings.Replace(check, "-", ".", -1)
-	return fmtdCheck
+	return strings.Replace(check, "-", ".", -1)
+	// return fmtdCheck
 }
 
 // DefineCheckStateDuration calculates how long a monitor has been in a given state.
@@ -89,17 +92,17 @@ func DefineCheckStateDuration() int {
 	return 0
 }
 
-// SetSensuEnv reads in the environment details provided by Oahi and drop it into a staticly defined struct.
+// SetSensuEnv reads in the environment details provided by Oahi and drops them into a staticly defined struct.
 func SetSensuEnv() *EnvDetails {
 	envFile, err := ioutil.ReadFile(EnvironmentFile)
 	if err != nil {
-		Check(err)
+		util.EHndlr(err)
 	}
 
 	var envDetails EnvDetails
 	err = json.Unmarshal(envFile, &envDetails)
 	if err != nil {
-		Check(err)
+		util.EHndlr(err)
 	}
 	return &envDetails
 }
@@ -108,19 +111,11 @@ func SetSensuEnv() *EnvDetails {
 func (e SensuEvent) AcquireSensuEvent() *SensuEvent {
 	results, err := ioutil.ReadAll(os.Stdin)
 	if err != nil {
-		Check(err)
+		util.EHndlr(err)
 	}
 	err = json.Unmarshal(results, &e)
 	if err != nil {
-		Check(err)
+		util.EHndlr(err)
 	}
 	return &e
-}
-
-// Check is for generic error handling in all Yieldbot alert and dashboard packages.
-func Check(e error) {
-	if e != nil {
-		fmt.Printf("%v", e)
-		panic(e)
-	}
 }

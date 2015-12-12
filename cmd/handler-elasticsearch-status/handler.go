@@ -1,4 +1,4 @@
-// Take well-formed json from stdin and create an elasticsearch document to be used to
+// Take well-formed json from a sensu check result and create an elasticsearch document to be used to
 // generate user specific dashboards or highly contextual alerts.
 //
 // LICENSE:
@@ -11,21 +11,23 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/yieldbot/sensu-yieldbot-handler-slack/Godeps/_workspace/src/github.com/olivere/elastic"
-	"github.com/yieldbot/sensu-yieldbot-handler-slack/Godeps/_workspace/src/github.com/yieldbot/ybsensu/handler"
+	"github.com/yieldbot/ybsensues/Godeps/_workspace/src/github.com/olivere/elastic"
+	"github.com/yieldbot/ybsensues/Godeps/_workspace/src/github.com/yieldbot/ybsensu/handler"
+	"github.com/yieldbot/ybsensues/Godeps/_workspace/src/github.com/yieldbot/ybsensu/util"
+	"github.com/yieldbot/ybsensues/lib"
 	"time"
 )
 
 func main() {
 
 	// set commandline flags
-	esIndexPtr := flag.String("index", handler.StatusEsIndex, "the elasticsearch index to use")
-	esHostPtr := flag.String("host", handler.DefaultEsHost, "the elasticsearch host")
-	esPortPtr := flag.String("port", handler.DefaultEsPort, "the elasticsearch port")
+	esIndexPtr := flag.String("index", lib.StatusEsIndex, "the elasticsearch index to use")
+	esHostPtr := flag.String("host", lib.DefaultEsHost, "the elasticsearch host")
+	esPortPtr := flag.String("port", lib.DefaultEsPort, "the elasticsearch port")
 
 	flag.Parse()
 	esIndex := *esIndexPtr
-	esType := handler.DefaultEsType
+	esType := lib.DefaultEsType
 	esHost := *esHostPtr
 	esPort := *esPortPtr
 
@@ -39,14 +41,14 @@ func main() {
 		elastic.SetURL("http://" + esHost + ":" + esPort),
 	)
 	if err != nil {
-		handler.Check(err)
+		util.EHndlr(err)
 	}
 
 	// Check to see if the index exists and if not create it
 	if client.IndexExists(esIndex) == nil { // need to test to make sure this does what I want
 		_, err = client.CreateIndex(esIndex).Do()
 		if err != nil {
-			handler.Check(err)
+			util.EHndlr(err)
 		}
 	}
 
@@ -72,7 +74,7 @@ func main() {
 		BodyJson(doc).
 		Do()
 	if err != nil {
-		handler.Check(err)
+		util.EHndlr(err)
 	}
 
 	// Log a successful document push to stdout. I don't add the id here as some id's are fixed but

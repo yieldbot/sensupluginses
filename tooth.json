@@ -5,7 +5,7 @@
     "type": "deployable"
   },
   "build": [
-    "make all"
+    "make pkg=handler-elasticsearch-status all"
   ],
   "version": [
     "make version"

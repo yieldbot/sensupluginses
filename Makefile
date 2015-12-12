@@ -172,7 +172,7 @@ default: all
 
 # build and then create a tarball in the target directory
 # basically everything needed to put it into artifactory
-all: format lint updatedeps build dist
+all: format build dist
 
 # Build a binary from the given package and drop it into the local bin
 build: pre-build

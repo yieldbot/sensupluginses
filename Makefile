@@ -178,7 +178,7 @@ all: format build dist
 build: pre-build
 	@for i in $$(echo $(pkg)); do \
 	  echo $$(ls $$GOPATH/bin); \
-  	$$GOPATH/bin/gox -osarch="$(osarch)" -output=$(output) ./$(srcdir)/$$i; \
+  	$$GOBIN/gox -osarch="$(osarch)" -output=$(output) ./$(srcdir)/$$i; \
   done; \
 
 # delete all existing binaries and directories used for building

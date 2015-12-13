@@ -177,8 +177,6 @@ all: format build dist
 # Build a binary from the given package and drop it into the local bin
 build: pre-build
 	@for i in $$(echo $(pkg)); do \
-	  export PATH=$$PATH:$$GOROOT/bin:$$GOBIN; \
-		echo $$(pwd); \
   	gox -osarch="$(osarch)" -output=$(output) ./$(srcdir)/$$i; \
   done; \
 
@@ -239,13 +237,6 @@ maintainer-clean:
 
 # create a directory to store binaries in
 pre-build:
-	echo This is the path:: $$PATH
-	export PATH=$$PATH:$$GOROOT/bin:$$GOBIN
-	echo This is the path:: $$PATH
-	echo This is the goroot:: $$GOROOT
-	echo This is the gobin:: $$GOBIN
-
-
 	mkdir -p ./bin/$(pkg)
 
 pre-dist:

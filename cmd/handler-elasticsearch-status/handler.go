@@ -11,10 +11,10 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.comybsensues/Godeps/_workspace/src/github.com/olivere/elastic"
 	"github.com/yieldbot/ybsensues/Godeps/_workspace/src/github.com/yieldbot/ybsensu/handler"
 	"github.com/yieldbot/ybsensues/Godeps/_workspace/src/github.com/yieldbot/ybsensu/util"
 	"github.com/yieldbot/ybsensues/lib"
+	"github.comybsensues/Godeps/_workspace/src/github.com/olivere/elastic"
 	"time"
 )
 

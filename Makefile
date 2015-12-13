@@ -178,7 +178,7 @@ all: format build dist
 build: pre-build
 	@for i in $$(echo $(pkg)); do \
 	  export PATH=$$PATH:$$GOROOT/bin:$$GOBIN; \
-		echo $$(pwd)
+		echo $$(pwd); \
   	gox -osarch="$(osarch)" -output=$(output) ./$(srcdir)/$$i; \
   done; \
 

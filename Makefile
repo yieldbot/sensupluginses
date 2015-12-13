@@ -177,7 +177,6 @@ all: format build dist
 # Build a binary from the given package and drop it into the local bin
 build: pre-build
 	@for i in $$(echo $(pkg)); do \
-	  export PATH=$$PATH:$$GOROOT/bin:$$GOBIN:$$GOPATH/src; \
   	gox -osarch="$(osarch)" -output=$(output) ./$(srcdir)/$$i; \
   done; \
 

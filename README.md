@@ -1,5 +1,5 @@
 # sensu-yieldbot-handler-elasticsearch
-ES Handler in golang 
+ES Handler in golang
 
 [![Build Status][travis-image]][travis-url]
 

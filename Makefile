@@ -238,7 +238,11 @@ maintainer-clean:
 # create a directory to store binaries in
 pre-build:
 	PATH=$$PATH:$$GOROOT/bin:$$GOBIN
-	echo $$PATH
+	echo This is the path:: $$PATH
+	echo This is the goroot:: $$GOROOT
+	echo This is the gobin::v$$GOBIN
+
+
 	mkdir -p ./bin/$(pkg)
 
 pre-dist:

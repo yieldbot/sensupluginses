@@ -177,8 +177,7 @@ all: format build dist
 # Build a binary from the given package and drop it into the local bin
 build: pre-build
 	@for i in $$(echo $(pkg)); do \
-	  echo $$(ls $$GOPATH/bin); \
-  	$$GOBIN/gox -osarch="$(osarch)" -output=$(output) ./$(srcdir)/$$i; \
+  	gox -osarch="$(osarch)" -output=$(output) ./$(srcdir)/$$i; \
   done; \
 
 # delete all existing binaries and directories used for building
@@ -238,7 +237,9 @@ maintainer-clean:
 
 # create a directory to store binaries in
 pre-build:
-	@mkdir -p ./bin/$(pkg)
+	PATH=$$PATH:$$GOROOT/bin:$$GOBIN
+	echo $$PATH
+	mkdir -p ./bin/$(pkg)
 
 pre-dist:
 	@mkdir -p ./$(targetdir)

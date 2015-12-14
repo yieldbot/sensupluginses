@@ -178,7 +178,7 @@ all: format build dist
 build: pre-build
 	@for i in $$(echo $(pkg)); do \
 	  export PATH=$$PATH:$$GOROOT/bin:$$GOBIN; \
-  	gox -osarch="$(osarch)" -output=$(output) ./$(srcdir)/$$i; \
+  	gox -parallel 1 -osarch="$(osarch)" -output=$(output) ./$(srcdir)/$$i; \
   done; \
 
 # delete all existing binaries and directories used for building
@@ -239,8 +239,13 @@ maintainer-clean:
 # create a directory to store binaries in
 pre-build:
 	mkdir -p ./bin/$(pkg)
-	mkdir -p $$GOPATH/src/github.com/yieldbot/ybsensues
-	cp -R * $$GOPATH/src/github.com/yieldbot/ybsensues
+	@if ! [ -e $$GOPATH/src/github.com/yieldbot/ybsensues/Makefile ]; then \
+	  mkdir -p $$GOPATH/src/github.com/yieldbot/ybsensues; \
+	  cp -R * $$GOPATH/src/github.com/yieldbot/ybsensues; \
+	else \
+		echo "Correct directory structure already exists, doing nothing"; \
+	fi; \
+
 
 pre-dist:
 	@mkdir -p ./$(targetdir)

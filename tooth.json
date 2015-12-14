@@ -5,7 +5,7 @@
     "type": "deployable"
   },
   "build": [
-    "make pkg=handler-elasticsearch-status all"
+    "make repo=ybsensues pkg=handler-elasticsearch-status all"
   ],
   "version": [
     "make version"

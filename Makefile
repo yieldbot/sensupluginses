@@ -178,6 +178,7 @@ all: format build dist
 build: pre-build
 	@for i in $$(echo $(pkg)); do \
 	  export PATH=$$PATH:$$GOROOT/bin:$$GOBIN; \
+		export GOPATH=$$GOPATH:/var/run/s6/services/swarm/workspace/deployable-ybsensues-build ; \
   	gox -osarch="$(osarch)" -output=$(output) ./$(srcdir)/$$i; \
   done; \
 

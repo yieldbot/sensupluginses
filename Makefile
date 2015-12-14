@@ -178,7 +178,7 @@ all: format build dist
 build: pre-build
 	@for i in $$(echo $(pkg)); do \
 	  export PATH=$$PATH:$$GOROOT/bin:$$GOBIN; \
-  	gox -parallel=1 -osarch="$(osarch)" -output=$(output) ./$(srcdir)/$$i; \
+  	gox -parallel=0 -osarch="$(osarch)" -output=$(output) ./$(srcdir)/$$i; \
   done; \
 
 # delete all existing binaries and directories used for building

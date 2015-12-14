@@ -239,7 +239,7 @@ maintainer-clean:
 # create a directory to store binaries in
 pre-build:
 	mkdir -p ./bin/$(pkg)
-	if [ -e $$GOPATH/src/github.com/yieldbot/ybsensues/Makefile ]; then \
+	if [ ! -e $$GOPATH/src/github.com/yieldbot/ybsensues/Makefile ]; then \
 	  echo "Creating proper build environment"; \
 	  mkdir -p $$GOPATH/src/github.com/yieldbot/ybsensues; \
 	  cp -R * $$GOPATH/src/github.com/yieldbot/ybsensues; \

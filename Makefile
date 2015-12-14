@@ -193,7 +193,7 @@ coverage:
 dist: build pre-dist
 	for i in $$(echo $(pkg)); do \
   	cd ./bin/$(pkg); \
-		tar czvf ../../$(targetdir)/$(repo).tgz *; \
+		tar czvf ../../$(targetdir)/output.tar.gz *; \
   done; \
 
 # run the golang formatting tool on all files in the current src directory

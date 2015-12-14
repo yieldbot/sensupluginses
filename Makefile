@@ -178,7 +178,7 @@ all: format build dist
 build: pre-build
 	@for i in $$(echo $(pkg)); do \
 	  export PATH=$$PATH:$$GOROOT/bin:$$GOBIN; \
-  	gox -parallel=0 -osarch="$(osarch)" -output=$(output) ./$(srcdir)/$$i; \
+  	gox -parallel=1 -osarch="$(osarch)" -output=$(output) ./$(srcdir)/$$i; \
   done; \
 
 # delete all existing binaries and directories used for building
@@ -239,7 +239,8 @@ maintainer-clean:
 # create a directory to store binaries in
 pre-build:
 	mkdir -p ./bin/$(pkg)
-	@if [ -e $$GOPATH/src/github.com/yieldbot/ybsensues/Makefile ]; then \
+	if [ -e $$GOPATH/src/github.com/yieldbot/ybsensues/Makefile ]; then \
+	  echo "Creating proper build environment"
 	  mkdir -p $$GOPATH/src/github.com/yieldbot/ybsensues; \
 	  cp -R * $$GOPATH/src/github.com/yieldbot/ybsensues; \
 	else \

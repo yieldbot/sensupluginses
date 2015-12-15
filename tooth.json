@@ -2,7 +2,7 @@
   "coordinates": {
     "org": "com.yieldbot.devops",
     "name": "sensu-yieldbot-handler-elasticsearch",
-    "type": "deployable"
+    "type": "golang"
   },
   "build": [
     "make repo=ybsensues pkg=handler-elasticsearch-status all"

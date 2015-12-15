@@ -237,15 +237,17 @@ maintainer-clean:
 	@echo "this needs to be implemented"
 
 # create a directory to store binaries in
+# YELLOW need to account for updated packages
+# YELLOW need to set the repo name automatically
 pre-build:
 	echo "Ensuring output binary directory exists"
 	@mkdir -p ./bin/$(pkg)
-	@if [ ! -e $$GOPATH/src/github.com/yieldbot/ybsensues/Makefile ]; then \
-	  echo "Creating proper build environment"; \
-	  mkdir -p $$GOPATH/src/github.com/yieldbot/ybsensues; \
-	  cp -R * $$GOPATH/src/github.com/yieldbot/ybsensues; \
+	@if [ -e $$GOPATH/src/github.com/yieldbot/ybsensues/Makefile ]; then \
+	  echo "Correct directory structure already exists, doing nothing"; \
 	else \
-		echo "Correct directory structure already exists, doing nothing"; \
+		echo "Creating proper build environment"; \
+		mkdir -p $$GOPATH/src/github.com/yieldbot/ybsensues; \
+		cp -R * $$GOPATH/src/github.com/yieldbot/ybsensues; \
 	fi; \
 
 

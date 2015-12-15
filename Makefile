@@ -238,8 +238,9 @@ maintainer-clean:
 
 # create a directory to store binaries in
 pre-build:
-	mkdir -p ./bin/$(pkg)
-	if [ ! -e $$GOPATH/src/github.com/yieldbot/ybsensues/Makefile ]; then \
+	echo "Ensuring output binary directory exists"
+	@mkdir -p ./bin/$(pkg)
+	@if [ ! -e $$GOPATH/src/github.com/yieldbot/ybsensues/Makefile ]; then \
 	  echo "Creating proper build environment"; \
 	  mkdir -p $$GOPATH/src/github.com/yieldbot/ybsensues; \
 	  cp -R * $$GOPATH/src/github.com/yieldbot/ybsensues; \
@@ -249,6 +250,7 @@ pre-build:
 
 
 pre-dist:
+	echo "Ensuring output tarball directory exists"
 	@mkdir -p ./$(targetdir)
 
 # run unit tests and anything else testing wise needed

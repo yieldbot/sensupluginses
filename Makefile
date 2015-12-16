@@ -192,7 +192,7 @@ coverage:
 # pack everything up neatly
 dist: build pre-dist
 	@cd ./bin/$(pkg); \
-	@tar czvf ../../$(targetdir)/output.tar.gz *; \
+	tar czvf ../../$(targetdir)/output.tar.gz *; \
 
 # run the golang formatting tool on all files in the current src directory
 format:
@@ -251,7 +251,7 @@ pre-build:
 
 
 pre-dist:
-	echo "Ensuring output tarball directory exists"
+	@echo "Ensuring output tarball directory exists"
 	@mkdir -p ./$(targetdir)
 
 # run unit tests and anything else testing wise needed

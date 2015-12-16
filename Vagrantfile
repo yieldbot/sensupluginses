@@ -42,6 +42,9 @@ go get github.com/axw/gocov/gocov
 go get -u github.com/golang/lint/golint
 go get github.com/tools/godep
 go get github.com/mitchellh/gox
+apt-add-repository ppa:brightbox/ruby-ng
+apt-get update
+apt-get install ruby2.2
 cat << 'EOF' >> /home/vagrant/.ssh/config
 StrictHostKeyChecking no
 EOF

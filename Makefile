@@ -239,8 +239,9 @@ maintainer-clean:
 # create a directory to store binaries in
 # YELLOW need to account for updated packages
 # YELLOW need to set the repo name automatically
+# YELLOW need to fix travis builds (if statement below)
 pre-build:
-	echo "Ensuring output binary directory exists"
+	@echo "Ensuring output binary directory exists"
 	@mkdir -p ./bin/$(pkg)
 	@if [ -e $$GOPATH/src/github.com/yieldbot/ybsensues/Makefile ]; then \
 	  echo "Correct directory structure already exists, doing nothing"; \

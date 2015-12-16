@@ -1,7 +1,7 @@
 {
   "coordinates": {
     "org": "ybsensues",
-    "name": "sensu-yieldbot-handler-elasticsearch",
+    "name": "ybsensues",
     "type": "golang"
   },
   "build": [

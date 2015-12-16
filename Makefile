@@ -237,7 +237,6 @@ maintainer-clean:
 # create a directory to store binaries in
 # YELLOW need to account for updated packages
 # YELLOW need to set the repo name automatically
-# YELLOW need to fix travis builds (if statement below)
 pre-build:
 	@echo "Ensuring output binary directory exists"
 	@mkdir -p ./bin/$(pkg)

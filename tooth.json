@@ -1,6 +1,6 @@
 {
   "coordinates": {
-    "org": "com.yieldbot.devops",
+    "org": "",
     "name": "sensu-yieldbot-handler-elasticsearch",
     "type": "golang"
   },

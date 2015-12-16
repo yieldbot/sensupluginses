@@ -2,7 +2,7 @@ SHELL = /bin/sh
 
 # This is a gernal purpose Makefile for building golang projects
 #
-# version 0.0.5
+# version 0.0.6
 # Copyright (c) 2015 Yieldbot
 
 .PHONY: all build bump_version clean coverage dist format info install lint maintainer-clean test test_all updatedeps version vet
@@ -71,7 +71,7 @@ endif
 # Set the path that the tarball will be dropped into. DrTeeth will look in
 # ./target by default but golang will put it into ./pkg if left to itself.
 ifndef targetdir
-targetdir = target
+targetdir = pkg
 endif
 
 # Set where the local binary should be installed to for testing purposes.
@@ -191,10 +191,8 @@ coverage:
 
 # pack everything up neatly
 dist: build pre-dist
-	for i in $$(echo $(pkg)); do \
-  	cd ./bin/$(pkg); \
-		tar czvf ../../$(targetdir)/output.tar.gz *; \
-  done; \
+	@cd ./bin/$(pkg); \
+	@tar czvf ../../$(targetdir)/output.tar.gz *; \
 
 # run the golang formatting tool on all files in the current src directory
 format:

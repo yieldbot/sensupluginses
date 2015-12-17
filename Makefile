@@ -253,11 +253,11 @@ pre-build:
 	  echo "Correct dependency directory structure already exists, doing nothing"; \
 	else \
 		echo "Creating proper build environment and dependency directory structure"; \
+		echo "Creating $$GOPATH/src/github.com/yieldbot/ybsensues"; \
 		mkdir -p $$GOPATH/src/github.com/yieldbot/ybsensues; \
+		echo "Copying dependencies from $$(pwd) -> $$GOPATH/src/github.com/yieldbot/ybsensues"; \
 		cp -R * $$GOPATH/src/github.com/yieldbot/ybsensues; \
 	fi; \
-
-
 
 pre-dist:
 	@if [ -e ../../cmd/$(pkg) ]; then \

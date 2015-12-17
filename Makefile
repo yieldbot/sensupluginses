@@ -256,7 +256,7 @@ pre-build:
 		echo "Creating $$GOPATH/src/github.com/yieldbot/ybsensues"; \
 		mkdir -p $$GOPATH/src/github.com/yieldbot/ybsensues; \
 		echo "Copying dependencies from $$(pwd) -> $$GOPATH/src/github.com/yieldbot/ybsensues"; \
-		cp -R * $$GOPATH/src/github.com/yieldbot/ybsensues; \
+		cp -R ../../* $$GOPATH/src/github.com/yieldbot/ybsensues; \
 	fi; \
 
 pre-dist:

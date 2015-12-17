@@ -242,7 +242,7 @@ maintainer-clean:
 # YELLOW need to account for updated packages
 # YELLOW need to set the repo name automatically
 pre-build:
-	@if [ -e $(srcdir)/cmd/$(pkg) ]; then \
+	@if [ -e ../../cmd/$(pkg) ]; then \
 		echo "Ensuring output binary directory exists"; \
 		mkdir -p $(srcdir)/bin/$(pkg); \
 	else \
@@ -259,7 +259,7 @@ pre-build:
 
 
 pre-dist:
-	@if [ -e $(srcdir)/cmd/$(pkg) ]; then \
+	@if [ -e ../../cmd/$(pkg) ]; then \
 		echo "Ensuring output tarball directory exists"; \
 	  mkdir -p $(srcdir)/$(targetdir); \
 	else \

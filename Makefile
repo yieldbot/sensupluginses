@@ -1,13 +1,13 @@
 SHELL = /bin/sh
 
-# This is a gernal purpose Makefile for building golang projects
+# This is a general purpose Makefile for building golang projects
 #
-# version 0.0.6
+# version 0.0.9
 # Copyright (c) 2015 Yieldbot
 
 .PHONY: all build bump_version clean coverage dist format info install lint maintainer-clean test test_all updatedeps version vet
 
-# We only care about golang and texinfo files at the moment so clear and explictly denote that
+# We only care about golang and texinfo files at the moment so clear and explicitly denote that
 .SUFFIXES:
 .SUFFIXES: .go .texinfo
 
@@ -19,7 +19,7 @@ infodir = /usr/local/share/info
 endif
 
 # Set the package to build. Specify additional values in a space
-# seperated array. To overwrite this use
+# separated array. To overwrite this use
 # `make pkg="diemon bobogono" build`
 ifndef pkg
 pkg = "."
@@ -45,7 +45,7 @@ pkgbase = github.com
 endif
 
 # Set the repo to look for the package in. Specify additional values in a space
-# seperated array. To overwrite this use
+# separated array. To overwrite this use
 # `make repo="diemon bobogono" build`
 ifndef repo
 repo := $(shell pwd | awk -F/ '{ print $$NF }')
@@ -183,7 +183,7 @@ build: pre-build
 
 # delete all existing binaries and directories used for building
 clean:
-		rm -rf ./bin ./$(targetdir)
+		rm -rf $(srcdir)/bin $(srcdir)/$(targetdir)
 
 # run the golang coverage tool
 coverage:
@@ -191,8 +191,12 @@ coverage:
 
 # pack everything up neatly
 dist: build pre-dist
-	@cd ./bin/$(pkg); \
-	tar czvf ../../$(targetdir)/output.tar.gz *; \
+	@if [ -e $(srcdir)/cmd/$(pkg) ]; then \
+    cd $(srcdir)/bin/$(pkg); \
+	  tar czvf ../../$(targetdir)/output.tar.gz *; \
+	else \
+	  echo "No binaries were found. No output package will be created"; \
+	fi; \
 
 # run the golang formatting tool on all files in the current src directory
 format:
@@ -238,20 +242,29 @@ maintainer-clean:
 # YELLOW need to account for updated packages
 # YELLOW need to set the repo name automatically
 pre-build:
-	@echo "Ensuring output binary directory exists"
-	@mkdir -p ./bin/$(pkg)
-	@if [ -e $$GOPATH/src/github.com/yieldbot/ybsensues/Makefile ]; then \
-	  echo "Correct directory structure already exists, doing nothing"; \
+	@if [ -e $(srcdir)/cmd/$(pkg) ]; then \
+		echo "Ensuring output binary directory exists"; \
+		mkdir -p $(srcdir)/bin/$(pkg); \
 	else \
-		echo "Creating proper build environment"; \
-		mkdir -p $$GOPATH/src/github.com/yieldbot/ybsensues; \
-		cp -R * $$GOPATH/src/github.com/yieldbot/ybsensues; \
+	  echo "No binaries were found. No bin directory will be created"; \
+	fi; \
+	if [ -e $$GOPATH/src/github.com/yieldbot/ybsensuplugin/Makefile ]; then \
+	  echo "Correct dependency directory structure already exists, doing nothing"; \
+	else \
+		echo "Creating proper build environment and dependency directory structure"; \
+		mkdir -p $$GOPATH/src/github.com/yieldbot/ybsensuplugin; \
+		cp -R * $$GOPATH/src/github.com/yieldbot/ybsensuplugin; \
 	fi; \
 
 
+
 pre-dist:
-	@echo "Ensuring output tarball directory exists"
-	@mkdir -p ./$(targetdir)
+	@if [ -e $(srcdir)/cmd/$(pkg) ]; then \
+		echo "Ensuring output tarball directory exists"; \
+	  mkdir -p $(srcdir)/$(targetdir); \
+	else \
+	  echo "No binaries were found. No output directory will be created"; \
+	fi; \
 
 # run unit tests and anything else testing wise needed
 test:
@@ -270,8 +283,8 @@ updatedeps:
 
 # print out the current version of the project
 version:
-	@if [ -e version ]; then \
-		ver=$$(awk '{ print $$NF }' version) ;\
+	@if [ -e $(pkg)/version ]; then \
+		ver=$$(awk '{ print $$NF }' $(pkg)/version) ;\
     echo "{\"version\":\"$$ver\"}"; \
 	else \
 		@echo "No version file found in the project root"; \
@@ -279,9 +292,9 @@ version:
 
 # bump the version of the project
 version_bump:
-	@ver=$$(awk '{ print $$NF }' version | awk -F. '{ print $$NF }'); \
+	@ver=$$(awk '{ print $$NF }' $(pkg)/version | awk -F. '{ print $$NF }'); \
 	ver=$$(($$ver+1)); \
-	echo "version 0.0.$$ver" > ./version
+	echo "version 0.0.$$ver" > $(pkg)/version
 
 # run go vet
 vet:

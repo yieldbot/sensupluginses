@@ -1,7 +1,7 @@
 # -*- mode: ruby -*-
 # vi: set ft=ruby :
 
-# version 0.0.4
+# version 0.0.6
 
 # Vagrantfile API/syntax version. Don't touch unless you know what you're doing!
 VAGRANTFILE_API_VERSION = '2'
@@ -45,6 +45,7 @@ go get github.com/mitchellh/gox
 apt-add-repository ppa:brightbox/ruby-ng
 apt-get update
 apt-get install ruby2.2
+gem install drteeth
 cat << 'EOF' >> /home/vagrant/.ssh/config
 StrictHostKeyChecking no
 EOF

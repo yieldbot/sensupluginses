@@ -249,12 +249,12 @@ pre-build:
 	else \
 	  echo "No binaries were found. No bin directory will be created"; \
 	fi; \
-	if [ -e $$GOPATH/src/github.com/yieldbot/ybsensuplugin/Makefile ]; then \
+	if [ -e $$GOPATH/src/github.com/yieldbot/ybsensues/Makefile ]; then \
 	  echo "Correct dependency directory structure already exists, doing nothing"; \
 	else \
 		echo "Creating proper build environment and dependency directory structure"; \
-		mkdir -p $$GOPATH/src/github.com/yieldbot/ybsensuplugin; \
-		cp -R * $$GOPATH/src/github.com/yieldbot/ybsensuplugin; \
+		mkdir -p $$GOPATH/src/github.com/yieldbot/ybsensues; \
+		cp -R * $$GOPATH/src/github.com/yieldbot/ybsensues; \
 	fi; \
 
 

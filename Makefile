@@ -56,15 +56,15 @@ endif
 # name will be suffixed with _OS_ARCH.
 ifndef out
 	ifeq ("$(osarch)","linux/amd64")
-		output = ./bin/$(pkg)/$(pkg)
+		output = ../../bin/$(pkg)/$(pkg)
 	else
-			output = ./bin/$(pkg)/$(pkg)_{{.OS}}_{{.Arch}}
+			output = ../../bin/$(pkg)/$(pkg)_{{.OS}}_{{.Arch}}
 	endif
 else
 	ifeq ("$(osarch)","linux/amd64")
-		output = ./bin/$(pkg)/$(out)
+		output = ../../bin/$(pkg)/$(out)
 	else
-			output = ./bin/$(pkg)/$(out)_{{.OS}}_{{.Arch}}
+			output = ../../bin/$(pkg)/$(out)_{{.OS}}_{{.Arch}}
 	endif
 endif
 
@@ -146,7 +146,7 @@ osarch Set the default os/arch to build for. Specify additional values in a spac
        Default: linux/amd64
 
 pkgbase Set the base package location.
-        Ex. `make pkgbase="github.com/yieldbot" build
+        Ex. `make pkgbase="github.com/yieldbot"` build
         Default: github.com
 
 repo Set the repo to look for the package in. Specify additional values in a space

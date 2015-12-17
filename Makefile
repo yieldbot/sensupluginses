@@ -191,8 +191,8 @@ coverage:
 
 # pack everything up neatly
 dist: build pre-dist
-	@if [ -e $(srcdir)/cmd/$(pkg) ]; then \
-    cd $(srcdir)/bin/$(pkg); \
+	@if [ -e ../../cmd/$(pkg) ]; then \
+    cd ../../bin/$(pkg); \
 	  tar czvf ../../$(targetdir)/output.tar.gz *; \
 	else \
 	  echo "No binaries were found. No output package will be created"; \

@@ -244,7 +244,8 @@ maintainer-clean:
 pre-build:
 	@if [ -e ../../cmd/$(pkg) ]; then \
 		echo "Ensuring output binary directory exists"; \
-		mkdir -p $(srcdir)/bin/$(pkg); \
+		echo "Creating ../../bin/$(pkg)"; \
+		mkdir -p ../../bin/$(pkg); \
 	else \
 	  echo "No binaries were found. No bin directory will be created"; \
 	fi; \
@@ -261,7 +262,8 @@ pre-build:
 pre-dist:
 	@if [ -e ../../cmd/$(pkg) ]; then \
 		echo "Ensuring output tarball directory exists"; \
-	  mkdir -p $(srcdir)/$(targetdir); \
+		echo "Creating ../../$(targetdir)"; \
+	  mkdir -p ../../$(targetdir); \
 	else \
 	  echo "No binaries were found. No output directory will be created"; \
 	fi; \

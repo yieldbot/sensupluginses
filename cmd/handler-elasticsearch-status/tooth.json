@@ -1,7 +1,7 @@
 {
   "coordinates": {
     "org": "ybsensues",
-    "name": "ybsensues",
+    "name": "handler-elasticsearch-status",
     "type": "golang"
   },
   "build": [

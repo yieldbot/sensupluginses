@@ -1,0 +1,16 @@
+{
+  "coordinates": {
+    "org": "sensuplugin",
+    "name": "sensuutil",
+    "type": "golang"
+  },
+  "build": [
+    "make -f ../Makefile srcdir=../ repo=sensuplugin pkg=sensuutil all"
+  ],
+  "version": [
+    "make -f ../Makefile version"
+  ],
+  "clean": [
+    "make -f ../Makefile srcdir=../ clean"
+  ]
+}

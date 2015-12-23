@@ -1,0 +1,11 @@
+{
+	"ImportPath": "github.com/yieldbot/sensuplugin/sensuhandler",
+	"GoVersion": "go1.5",
+	"Deps": [
+		{
+			"ImportPath": "github.com/yieldbot/sensuplugin/sensuutil",
+			"Comment": "v1.0.0-50-g6d1d13f",
+			"Rev": "6d1d13f0cc2b61f9f5b1bf6c9019527aec080b04"
+		}
+	]
+}

@@ -11,10 +11,10 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/yieldbot/ybsensues/Godeps/_workspace/src/github.com/olivere/elastic"
-	"github.com/yieldbot/ybsensues/Godeps/_workspace/src/github.com/yieldbot/ybsensu/handler"
-	"github.com/yieldbot/ybsensues/Godeps/_workspace/src/github.com/yieldbot/ybsensu/util"
-	"github.com/yieldbot/ybsensues/lib"
+	"github.com/olivere/elastic"
+	"github.com/yieldbot/sensues/lib"
+	"github.com/yieldbot/sensuplugin/sensuhandler"
+	"github.com/yieldbot/sensuplugin/sensuutil"
 	"time"
 )
 
@@ -31,9 +31,9 @@ func main() {
 	esHost := *esHostPtr
 	esPort := *esPortPtr
 
-	sensuEvent := new(handler.SensuEvent)
+	sensuEvent := new(sensuhandler.SensuEvent)
 
-	sensuEnv := handler.SetSensuEnv()
+	sensuEnv := sensuhandler.SetSensuEnv()
 	sensuEvent = sensuEvent.AcquireSensuEvent()
 
 	// Create a client
@@ -55,16 +55,16 @@ func main() {
 	// Create an Elasticsearch document. The document type will define the mapping used for the document.
 	doc := make(map[string]interface{})
 	var docID string
-	docID = handler.EventName(sensuEvent.Client.Name, sensuEvent.Check.Name)
+	docID = sensuhandler.EventName(sensuEvent.Client.Name, sensuEvent.Check.Name)
 	doc["monitored_instance"] = sensuEvent.AcquireMonitoredInstance()
 	doc["sensu_client"] = sensuEvent.Client.Name
 	doc["incident_timestamp"] = time.Unix(sensuEvent.Check.Issued, 0).Format(time.RFC3339)
-	doc["check_name"] = handler.CreateCheckName(sensuEvent.Check.Name)
-	doc["check_state"] = handler.DefineStatus(sensuEvent.Check.Status)
-	doc["sensuEnv"] = handler.DefineSensuEnv(sensuEnv.Sensu.Environment)
+	doc["check_name"] = sensuhandler.CreateCheckName(sensuEvent.Check.Name)
+	doc["check_state"] = sensuhandler.DefineStatus(sensuEvent.Check.Status)
+	doc["sensuEnv"] = sensuhandler.DefineSensuEnv(sensuEnv.Sensu.Environment)
 	doc["tags"] = sensuEvent.Check.Tags
 	doc["instance_address"] = sensuEvent.Client.Address
-	doc["check_state_duration"] = handler.DefineCheckStateDuration()
+	doc["check_state_duration"] = sensuhandler.DefineCheckStateDuration()
 
 	// Add a document to the Elasticsearch index
 	_, err = client.Index().
@@ -74,7 +74,7 @@ func main() {
 		BodyJson(doc).
 		Do()
 	if err != nil {
-		util.EHndlr(err)
+		sensuutil.EHndlr(err)
 	}
 
 	// Log a successful document push to stdout. I don't add the id here as some id's are fixed but

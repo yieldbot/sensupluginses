@@ -212,7 +212,7 @@ pre-build:
 	echo "Creating $$GOPATH/src/github.com/yieldbot/sensues"; \
 	mkdir -p $$GOPATH/src/github.com/yieldbot/sensues; \
 	echo "Copying dependencies from $$(pwd) -> $$GOPATH/src/github.com/yieldbot/sensues"; \
-	#cp -R ../../* $$GOPATH/src/github.com/yieldbot/sensues; \
+	cp -R ../../* $$GOPATH/src/github.com/yieldbot/sensues; \
 
 pre-dist:
 	@if [ -e ../../cmd/$(pkg) ]; then \

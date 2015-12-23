@@ -41,14 +41,14 @@ func main() {
 		elastic.SetURL("http://" + esHost + ":" + esPort),
 	)
 	if err != nil {
-		util.EHndlr(err)
+		sensuutil.EHndlr(err)
 	}
 
 	// Check to see if the index exists and if not create it
 	if client.IndexExists(esIndex) == nil { // need to test to make sure this does what I want
 		_, err = client.CreateIndex(esIndex).Do()
 		if err != nil {
-			util.EHndlr(err)
+			sensuutil.EHndlr(err)
 		}
 	}
 

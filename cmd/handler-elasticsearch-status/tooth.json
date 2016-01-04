@@ -1,6 +1,6 @@
 {
   "coordinates": {
-    "org": "sensues",
+    "org": "handler-elasticsearch-status",
     "name": "handler-elasticsearch-status",
     "type": "golang"
   },

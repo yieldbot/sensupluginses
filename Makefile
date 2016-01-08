@@ -133,7 +133,7 @@ all: format build dist
 # Build a binary from the given package and drop it into the local bin
 build: pre-build
 	  export PATH=$$PATH:$$GOROOT/bin:$$GOBIN; \
-	  godep go build
+	  godep go build --ldflags '-linkmode external -extldflags "-static"'
 
 	  if [ -e $(pkg) ]; then \
       mv $(pkg) ../../bin/$(pkg)/$(pkg); \

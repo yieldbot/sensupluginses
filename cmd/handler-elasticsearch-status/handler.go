@@ -40,7 +40,7 @@ func main() {
 	client, err := elastic.NewClient(
 		elastic.SetURL("http://" + esHost + ":" + esPort),
 	)
-	fmt.Printf("http://" = esHost + ":" + esPort)
+	fmt.Printf("http://" + esHost + ":" + esPort)
 	if err != nil {
 		sensuutil.EHndlr(err)
 	}

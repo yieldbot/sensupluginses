@@ -9,7 +9,7 @@
     "type": "golang"
   },
   "build": [
-    "make all"
+    "make pre-build && make all"
   ],
   "bump": [
     "make version_bump"

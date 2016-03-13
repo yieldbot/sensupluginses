@@ -12,7 +12,7 @@
     "make pkg=sensupluginses pre-build && make pkg=sensupluginses all"
   ],
   "bump": [
-    "make null"
+    "make version_bump"
   ],
   "version": [
     "make version"

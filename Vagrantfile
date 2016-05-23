@@ -16,8 +16,8 @@ sudo apt-get update
 sudo apt-get install -y build-essential curl git-core libpcre3-dev mercurial pkg-config zip expect
 # Install Go
 cd /tmp
-wget -q https://storage.googleapis.com/golang/go1.5.1.linux-${ARCH}.tar.gz
-tar -xf go1.5.1.linux-${ARCH}.tar.gz
+wget -q https://storage.googleapis.com/golang/go1.6.2.linux-${ARCH}.tar.gz
+tar -xf go1.6.2.linux-${ARCH}.tar.gz
 sudo mv go $SRCROOT
 sudo chmod 775 $SRCROOT
 sudo chown vagrant:vagrant $SRCROOT

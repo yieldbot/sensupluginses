@@ -5,7 +5,7 @@
 //   Released under the MIT License; see LICENSE
 //   for details.
 
-package cmd
+package sensupluginses
 
 // Default values for connecting with and indexing Elasticsearch.
 const (

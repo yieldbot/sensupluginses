@@ -20,8 +20,8 @@
 
 package main
 
-import "github.com/yieldbot/sensupluginses/cmd"
+import "github.com/yieldbot/sensupluginses/sensupluginses"
 
 func main() {
-	cmd.Execute()
+	sensupluginses.Execute()
 }

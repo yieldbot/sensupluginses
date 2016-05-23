@@ -18,15 +18,15 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-package cmd
+package sensupluginses
 
 import (
 	"fmt"
+	"time"
+
 	"github.com/olivere/elastic"
 	"github.com/spf13/cobra"
 	"github.com/yieldbot/sensuplugin/sensuhandler"
-	"github.com/yieldbot/sensuplugin/sensuutil"
-	"time"
 )
 
 var esHost string
@@ -41,7 +41,7 @@ var handlerElasticsearchStatusCmd = &cobra.Command{
   the check name. This key will remain consistent so that only the latest status will be available in
   the index. This is designed to allow the creation of current dashboards from Kibana or Dashing.`,
 
-	Run: func(cmd *cobra.Command, args []string) {
+	Run: func(sensupluginses *cobra.Command, args []string) {
 		sensuEvent := new(sensuhandler.SensuEvent)
 
 		sensuEnv := sensuhandler.SetSensuEnv()
@@ -53,7 +53,7 @@ var handlerElasticsearchStatusCmd = &cobra.Command{
 		)
 		fmt.Printf("http://" + esHost + ":" + esPort)
 		if err != nil {
-			sensuutil.EHndlr(err)
+			panic(err)
 
 		}
 
@@ -61,7 +61,7 @@ var handlerElasticsearchStatusCmd = &cobra.Command{
 		if client.IndexExists(esIndex) == nil { // need to test to make sure this does what I want
 			_, err = client.CreateIndex(esIndex).Do()
 			if err != nil {
-				sensuutil.EHndlr(err)
+				panic(err)
 
 			}
 		}
@@ -88,7 +88,7 @@ var handlerElasticsearchStatusCmd = &cobra.Command{
 			BodyJson(doc).
 			Do()
 		if err != nil {
-			sensuutil.EHndlr(err)
+			panic(err)
 
 		}
 

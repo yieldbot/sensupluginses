@@ -34,6 +34,8 @@ var esIndex string
 var esPort string
 var esType = DefaultEsType
 
+var sensuEnv = new(sensuhandler.EnvDetails)
+
 var handlerElasticsearchStatusCmd = &cobra.Command{
 	Use:   "handlerElasticsearchStatus --index <index> --host <host> --port <port>",
 	Short: "This will input a single record for each check result given, overwriting the currect record.",
@@ -44,7 +46,7 @@ var handlerElasticsearchStatusCmd = &cobra.Command{
 	Run: func(sensupluginses *cobra.Command, args []string) {
 		sensuEvent := new(sensuhandler.SensuEvent)
 
-		sensuEnv := sensuhandler.SetSensuEnv()
+		sensuEnv = sensuEnv.SetSensuEnv()
 		sensuEvent = sensuEvent.AcquireSensuEvent()
 
 		// Create a client

@@ -1,7 +1,7 @@
 # -*- mode: ruby -*-
 # vi: set ft=ruby :
 
-# version 0.0.8
+# version 0.0.9
 
 # Vagrantfile API/syntax version. Don't touch unless you know what you're doing!
 VAGRANTFILE_API_VERSION = '2'
@@ -31,7 +31,6 @@ cat <<EOF >/tmp/gopath.sh
 export GOPATH="$SRCPATH"
 export GOROOT="$SRCROOT"
 export PATH="$SRCROOT/bin:$SRCPATH/bin:\$PATH"
-export GO15VENDOREXPERIMENT=0
 EOF
 sudo mv /tmp/gopath.sh /etc/profile.d/gopath.sh
 sudo chmod 0755 /etc/profile.d/gopath.sh
@@ -41,6 +40,11 @@ chmod 600 /home/vagrant/.ssh/config
 go get github.com/axw/gocov/gocov
 go get -u github.com/golang/lint/golint
 go get github.com/tools/godep
+go get -u github.com/kardianos/govendor
+go get github.com/Sirupsen/logrus
+go get github.com/spf13/cobra
+go get github.com/spf13/viper
+go get github.com/yieldbot/sensuplugin/sensuutil
 cat << 'EOF' >> /home/vagrant/.ssh/config
 StrictHostKeyChecking no
 EOF

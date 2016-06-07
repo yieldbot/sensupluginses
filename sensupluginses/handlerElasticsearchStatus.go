@@ -21,21 +21,25 @@
 package sensupluginses
 
 import (
-	"fmt"
 	"time"
 
+	"github.com/Sirupsen/logrus"
 	"github.com/olivere/elastic"
 	"github.com/spf13/cobra"
 	"github.com/yieldbot/sensuplugin/sensuhandler"
+	"github.com/yieldbot/sensupluginses/version"
 )
 
+// elasticsearch endpoint configuration
 var esHost string
 var esIndex string
 var esPort string
 var esType = DefaultEsType
 
+// Bring in the environmant details
 var sensuEnv = new(sensuhandler.EnvDetails)
 
+// main entry point
 var handlerElasticsearchStatusCmd = &cobra.Command{
 	Use:   "handlerElasticsearchStatus --index <index> --host <host> --port <port>",
 	Short: "This will input a single record for each check result given, overwriting the currect record.",
@@ -44,18 +48,27 @@ var handlerElasticsearchStatusCmd = &cobra.Command{
   the index. This is designed to allow the creation of current dashboards from Kibana or Dashing.`,
 
 	Run: func(sensupluginses *cobra.Command, args []string) {
-		sensuEvent := new(sensuhandler.SensuEvent)
 
-		sensuEnv = sensuEnv.SetSensuEnv()
+		// read in the event data from the sensu server
+		sensuEvent := new(sensuhandler.SensuEvent)
 		sensuEvent = sensuEvent.AcquireSensuEvent()
+
+		// set the environment this is running in (prd, dev,stg)
+		sensuEnv = sensuEnv.SetSensuEnv()
 
 		// Create a client
 		client, err := elastic.NewClient(
 			elastic.SetURL("http://" + esHost + ":" + esPort),
 		)
-		fmt.Printf("http://" + esHost + ":" + esPort)
 		if err != nil {
-			panic(err)
+			syslogLog.WithFields(logrus.Fields{
+				"check":   "sensupluginses",
+				"client":  host,
+				"version": version.AppVersion(),
+				"error":   err,
+				"esHost":  esHost,
+				"esPort":  esPort,
+			}).Error(`Could not create an elasticsearch client`)
 
 		}
 
@@ -63,7 +76,13 @@ var handlerElasticsearchStatusCmd = &cobra.Command{
 		if client.IndexExists(esIndex) == nil { // need to test to make sure this does what I want
 			_, err = client.CreateIndex(esIndex).Do()
 			if err != nil {
-				panic(err)
+				syslogLog.WithFields(logrus.Fields{
+					"check":   "sensupluginses",
+					"client":  host,
+					"version": version.AppVersion(),
+					"error":   err,
+					"esIndex": esIndex,
+				}).Error(`Could not create an elasticsearch index`)
 
 			}
 		}
@@ -90,13 +109,28 @@ var handlerElasticsearchStatusCmd = &cobra.Command{
 			BodyJson(doc).
 			Do()
 		if err != nil {
-			panic(err)
+			syslogLog.WithFields(logrus.Fields{
+				"check":   "sensupluginses",
+				"client":  host,
+				"version": version.AppVersion(),
+				"error":   err,
+				"esHost":  esHost,
+				"esPort":  esPort,
+				"esIndex": esIndex,
+			}).Error(`Could not post a document to elasticsearch`)
 
 		}
 
 		// Log a successful document push to stdout. I don't add the id here as some id's are fixed but
 		// the user has the ability to autogenerate an id if they don't want to provide one.
-		fmt.Printf("Record added to ES\n")
+		syslogLog.WithFields(logrus.Fields{
+			"check":   "sensupluginses",
+			"client":  host,
+			"version": version.AppVersion(),
+			"esHost":  esHost,
+			"esPort":  esPort,
+			"esIndex": esIndex,
+		}).Info(`Document posted to elasticsearch`)
 	},
 }
 

@@ -4,12 +4,12 @@
     "If nothing is there then nothing will be pushed back."
   ],
   "coordinates": {
-    "org": "sensupluginschrony",
-    "name": "sensupluginschrony",
+    "org": "sensupluginses",
+    "name": "sensupluginses",
     "type": "golang"
   },
   "build": [
-    "make pkg=sensupluginschrony pre-build && make pkg=sensupluginschrony all"
+    "make pkg=sensupluginses pre-build && make pkg=sensupluginses all"
   ],
   "bump": [
     "make version_bump"

@@ -1,4 +1,4 @@
-// Copyright © 2016 Anthony Spring <aspring@yieldbot.com>
+// Copyright © 2017 Anthony Spring <aspring@yieldbot.com>
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -28,10 +28,10 @@ import (
 const AppVersionMajor = "0"
 
 // AppVersionMinor is the minor revison number
-const AppVersionMinor = "1"
+const AppVersionMinor = "2"
 
 // AppVersionPatch is the patch version
-const AppVersionPatch = "12"
+const AppVersionPatch = "13"
 
 // AppVersionPre ...
 const AppVersionPre = ""

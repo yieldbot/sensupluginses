@@ -9,7 +9,9 @@ import (
 	"net/url"
 	"strings"
 
-	"gopkg.in/olivere/elastic.v3/uritemplates"
+	"golang.org/x/net/context"
+
+	"gopkg.in/olivere/elastic.v5/uritemplates"
 )
 
 // CountService is a convenient service for determining the
@@ -256,7 +258,7 @@ func (s *CountService) Validate() error {
 }
 
 // Do executes the operation.
-func (s *CountService) Do() (int64, error) {
+func (s *CountService) Do(ctx context.Context) (int64, error) {
 	// Check pre-conditions
 	if err := s.Validate(); err != nil {
 		return 0, err
@@ -285,7 +287,7 @@ func (s *CountService) Do() (int64, error) {
 	}
 
 	// Get HTTP response
-	res, err := s.client.PerformRequest("POST", path, params, body)
+	res, err := s.client.PerformRequest(ctx, "POST", path, params, body)
 	if err != nil {
 		return 0, err
 	}

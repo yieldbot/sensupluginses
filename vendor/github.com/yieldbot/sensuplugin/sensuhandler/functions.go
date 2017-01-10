@@ -59,8 +59,6 @@ func (e SensuEvent) AcquireThreshold() string {
 		c = strconv.Itoa(e.Check.Thresholds.Critical)
 	}
 
-	// YELLOW
-	// refactor this so the case is dynamic
 	switch e.Check.Status {
 	case 0:
 		if w != "" { // this is stupid and ugly, fix it

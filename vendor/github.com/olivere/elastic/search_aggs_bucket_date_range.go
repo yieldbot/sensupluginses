@@ -1,4 +1,4 @@
-// Copyright 2012-2015 Oliver Eilhard. All rights reserved.
+// Copyright 2012-present Oliver Eilhard. All rights reserved.
 // Use of this source code is governed by a MIT-license.
 // See http://olivere.mit-license.org/license.txt for details.
 
@@ -182,7 +182,7 @@ func (a *DateRangeAggregation) Source() (interface{}, error) {
 		opts["format"] = a.format
 	}
 
-	ranges := make([]interface{}, 0)
+	var ranges []interface{}
 	for _, ent := range a.entries {
 		r := make(map[string]interface{})
 		if ent.Key != "" {

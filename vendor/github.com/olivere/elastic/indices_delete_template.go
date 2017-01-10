@@ -1,4 +1,4 @@
-// Copyright 2012-2015 Oliver Eilhard. All rights reserved.
+// Copyright 2012-present Oliver Eilhard. All rights reserved.
 // Use of this source code is governed by a MIT-license.
 // See http://olivere.mit-license.org/license.txt for details.
 
@@ -8,7 +8,9 @@ import (
 	"fmt"
 	"net/url"
 
-	"gopkg.in/olivere/elastic.v3/uritemplates"
+	"golang.org/x/net/context"
+
+	"gopkg.in/olivere/elastic.v5/uritemplates"
 )
 
 // IndicesDeleteTemplateService deletes index templates.
@@ -89,7 +91,7 @@ func (s *IndicesDeleteTemplateService) Validate() error {
 }
 
 // Do executes the operation.
-func (s *IndicesDeleteTemplateService) Do() (*IndicesDeleteTemplateResponse, error) {
+func (s *IndicesDeleteTemplateService) Do(ctx context.Context) (*IndicesDeleteTemplateResponse, error) {
 	// Check pre-conditions
 	if err := s.Validate(); err != nil {
 		return nil, err
@@ -102,7 +104,7 @@ func (s *IndicesDeleteTemplateService) Do() (*IndicesDeleteTemplateResponse, err
 	}
 
 	// Get HTTP response
-	res, err := s.client.PerformRequest("DELETE", path, params, nil)
+	res, err := s.client.PerformRequest(ctx, "DELETE", path, params, nil)
 	if err != nil {
 		return nil, err
 	}

@@ -1,11 +1,13 @@
-// Copyright 2012-2015 Oliver Eilhard. All rights reserved.
+// Copyright 2012-present Oliver Eilhard. All rights reserved.
 // Use of this source code is governed by a MIT-license.
 // See http://olivere.mit-license.org/license.txt for details.
 
 package elastic
 
+// PhraseSuggester provides an API to access word alternatives
+// on a per token basis within a certain string distance.
 // For more details, see
-// http://www.elasticsearch.org/guide/reference/api/search/phrase-suggest/
+// https://www.elastic.co/guide/en/elasticsearch/reference/master/search-suggesters-phrase.html.
 type PhraseSuggester struct {
 	Suggester
 	name           string
@@ -28,18 +30,16 @@ type PhraseSuggester struct {
 	tokenLimit              *int
 	preTag, postTag         *string
 	collateQuery            *string
-	collateFilter           *string
 	collatePreference       *string
 	collateParams           map[string]interface{}
 	collatePrune            *bool
 }
 
-// Creates a new phrase suggester.
+// NewPhraseSuggester creates a new PhraseSuggester.
 func NewPhraseSuggester(name string) *PhraseSuggester {
 	return &PhraseSuggester{
-		name:           name,
-		contextQueries: make([]SuggesterContextQuery, 0),
-		collateParams:  make(map[string]interface{}),
+		name:          name,
+		collateParams: make(map[string]interface{}),
 	}
 }
 
@@ -159,11 +159,6 @@ func (q *PhraseSuggester) CollateQuery(collateQuery string) *PhraseSuggester {
 	return q
 }
 
-func (q *PhraseSuggester) CollateFilter(collateFilter string) *PhraseSuggester {
-	q.collateFilter = &collateFilter
-	return q
-}
-
 func (q *PhraseSuggester) CollatePreference(collatePreference string) *PhraseSuggester {
 	q.collatePreference = &collatePreference
 	return q
@@ -179,7 +174,7 @@ func (q *PhraseSuggester) CollatePrune(collatePrune bool) *PhraseSuggester {
 	return q
 }
 
-// simplePhraseSuggesterRequest is necessary because the order in which
+// phraseSuggesterRequest is necessary because the order in which
 // the JSON elements are routed to Elasticsearch is relevant.
 // We got into trouble when using plain maps because the text element
 // needs to go before the simple_phrase element.
@@ -188,7 +183,7 @@ type phraseSuggesterRequest struct {
 	Phrase interface{} `json:"phrase"`
 }
 
-// Creates the source for the phrase suggester.
+// Source generates the source for the phrase suggester.
 func (q *PhraseSuggester) Source(includeName bool) (interface{}, error) {
 	ps := &phraseSuggesterRequest{}
 
@@ -220,7 +215,7 @@ func (q *PhraseSuggester) Source(includeName bool) (interface{}, error) {
 		}
 		suggester["context"] = src
 	default:
-		ctxq := make([]interface{}, 0)
+		var ctxq []interface{}
 		for _, query := range q.contextQueries {
 			src, err := query.Source()
 			if err != nil {
@@ -255,7 +250,7 @@ func (q *PhraseSuggester) Source(includeName bool) (interface{}, error) {
 	}
 	if q.generators != nil && len(q.generators) > 0 {
 		for typ, generators := range q.generators {
-			arr := make([]interface{}, 0)
+			var arr []interface{}
 			for _, g := range generators {
 				src, err := g.Source()
 				if err != nil {
@@ -283,14 +278,11 @@ func (q *PhraseSuggester) Source(includeName bool) (interface{}, error) {
 		}
 		suggester["highlight"] = hl
 	}
-	if q.collateQuery != nil || q.collateFilter != nil {
+	if q.collateQuery != nil {
 		collate := make(map[string]interface{})
 		suggester["collate"] = collate
 		if q.collateQuery != nil {
 			collate["query"] = *q.collateQuery
-		}
-		if q.collateFilter != nil {
-			collate["filter"] = *q.collateFilter
 		}
 		if q.collatePreference != nil {
 			collate["preference"] = *q.collatePreference

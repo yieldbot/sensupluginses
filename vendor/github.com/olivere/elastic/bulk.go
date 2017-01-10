@@ -10,7 +10,9 @@ import (
 	"fmt"
 	"net/url"
 
-	"gopkg.in/olivere/elastic.v3/uritemplates"
+	"golang.org/x/net/context"
+
+	"gopkg.in/olivere/elastic.v5/uritemplates"
 )
 
 // BulkService allows for batching bulk requests and sending them to
@@ -22,26 +24,30 @@ import (
 // reuse BulkService to send many batches. You do not have to create a new
 // BulkService for each batch.
 //
-// See https://www.elastic.co/guide/en/elasticsearch/reference/2.x/docs-bulk.html
+// See https://www.elastic.co/guide/en/elasticsearch/reference/5.0/docs-bulk.html
 // for more details.
 type BulkService struct {
 	client *Client
 
-	index    string
-	typ      string
-	requests []BulkableRequest
-	timeout  string
-	refresh  *bool
-	pretty   bool
+	index               string
+	typ                 string
+	requests            []BulkableRequest
+	pipeline            string
+	timeout             string
+	refresh             string
+	routing             string
+	waitForActiveShards string
+	pretty              bool
 
-	sizeInBytes int64
+	// estimated bulk size in bytes, up to the request index sizeInBytesCursor
+	sizeInBytes       int64
+	sizeInBytesCursor int
 }
 
 // NewBulkService initializes a new BulkService.
 func NewBulkService(client *Client) *BulkService {
 	builder := &BulkService{
-		client:   client,
-		requests: make([]BulkableRequest, 0),
+		client: client,
 	}
 	return builder
 }
@@ -49,6 +55,7 @@ func NewBulkService(client *Client) *BulkService {
 func (s *BulkService) reset() {
 	s.requests = make([]BulkableRequest, 0)
 	s.sizeInBytes = 0
+	s.sizeInBytesCursor = 0
 }
 
 // Index specifies the index to use for all batches. You may also leave
@@ -73,11 +80,35 @@ func (s *BulkService) Timeout(timeout string) *BulkService {
 	return s
 }
 
-// Refresh, when set to true, tells Elasticsearch to make the bulk requests
-// available to search immediately after being processed. Normally, this
-// only happens after a specified refresh interval.
-func (s *BulkService) Refresh(refresh bool) *BulkService {
-	s.refresh = &refresh
+// Refresh controls when changes made by this request are made visible
+// to search. The allowed values are: "true" (refresh the relevant
+// primary and replica shards immediately), "wait_for" (wait for the
+// changes to be made visible by a refresh before applying), or "false"
+// (no refresh related actions).
+func (s *BulkService) Refresh(refresh string) *BulkService {
+	s.refresh = refresh
+	return s
+}
+
+// Routing specifies the routing value.
+func (s *BulkService) Routing(routing string) *BulkService {
+	s.routing = routing
+	return s
+}
+
+// Pipeline specifies the pipeline id to preprocess incoming documents with.
+func (s *BulkService) Pipeline(pipeline string) *BulkService {
+	s.pipeline = pipeline
+	return s
+}
+
+// WaitForActiveShards sets the number of shard copies that must be active
+// before proceeding with the bulk operation. Defaults to 1, meaning the
+// primary shard only. Set to `all` for all shard copies, otherwise set to
+// any non-negative value less than or equal to the total number of copies
+// for the shard (number of replicas + 1).
+func (s *BulkService) WaitForActiveShards(waitForActiveShards string) *BulkService {
+	s.waitForActiveShards = waitForActiveShards
 	return s
 }
 
@@ -92,7 +123,6 @@ func (s *BulkService) Pretty(pretty bool) *BulkService {
 func (s *BulkService) Add(requests ...BulkableRequest) *BulkService {
 	for _, r := range requests {
 		s.requests = append(s.requests, r)
-		s.sizeInBytes += s.estimateSizeInBytes(r)
 	}
 	return s
 }
@@ -100,6 +130,13 @@ func (s *BulkService) Add(requests ...BulkableRequest) *BulkService {
 // EstimatedSizeInBytes returns the estimated size of all bulkable
 // requests added via Add.
 func (s *BulkService) EstimatedSizeInBytes() int64 {
+	if s.sizeInBytesCursor == len(s.requests) {
+		return s.sizeInBytes
+	}
+	for _, r := range s.requests[s.sizeInBytesCursor:] {
+		s.sizeInBytes += s.estimateSizeInBytes(r)
+		s.sizeInBytesCursor++
+	}
 	return s.sizeInBytes
 }
 
@@ -123,7 +160,7 @@ func (s *BulkService) NumberOfActions() int {
 }
 
 func (s *BulkService) bodyAsString() (string, error) {
-	buf := bytes.NewBufferString("")
+	var buf bytes.Buffer
 
 	for _, req := range s.requests {
 		source, err := req.Source()
@@ -131,10 +168,8 @@ func (s *BulkService) bodyAsString() (string, error) {
 			return "", err
 		}
 		for _, line := range source {
-			_, err := buf.WriteString(fmt.Sprintf("%s\n", line))
-			if err != nil {
-				return "", nil
-			}
+			buf.WriteString(line)
+			buf.WriteByte('\n')
 		}
 	}
 
@@ -144,7 +179,7 @@ func (s *BulkService) bodyAsString() (string, error) {
 // Do sends the batched requests to Elasticsearch. Note that, when successful,
 // you can reuse the BulkService for the next batch as the list of bulk
 // requests is cleared on success.
-func (s *BulkService) Do() (*BulkResponse, error) {
+func (s *BulkService) Do(ctx context.Context) (*BulkResponse, error) {
 	// No actions?
 	if s.NumberOfActions() == 0 {
 		return nil, errors.New("elastic: No bulk actions to commit")
@@ -158,7 +193,7 @@ func (s *BulkService) Do() (*BulkResponse, error) {
 
 	// Build url
 	path := "/"
-	if s.index != "" {
+	if len(s.index) > 0 {
 		index, err := uritemplates.Expand("{index}", map[string]string{
 			"index": s.index,
 		})
@@ -167,7 +202,7 @@ func (s *BulkService) Do() (*BulkResponse, error) {
 		}
 		path += index + "/"
 	}
-	if s.typ != "" {
+	if len(s.typ) > 0 {
 		typ, err := uritemplates.Expand("{type}", map[string]string{
 			"type": s.typ,
 		})
@@ -183,15 +218,24 @@ func (s *BulkService) Do() (*BulkResponse, error) {
 	if s.pretty {
 		params.Set("pretty", fmt.Sprintf("%v", s.pretty))
 	}
-	if s.refresh != nil {
-		params.Set("refresh", fmt.Sprintf("%v", *s.refresh))
+	if s.pipeline != "" {
+		params.Set("pipeline", s.pipeline)
+	}
+	if s.refresh != "" {
+		params.Set("refresh", s.refresh)
+	}
+	if s.routing != "" {
+		params.Set("routing", s.routing)
 	}
 	if s.timeout != "" {
 		params.Set("timeout", s.timeout)
 	}
+	if s.waitForActiveShards != "" {
+		params.Set("wait_for_active_shards", s.waitForActiveShards)
+	}
 
 	// Get response
-	res, err := s.client.PerformRequest("POST", path, params, body)
+	res, err := s.client.PerformRequest(ctx, "POST", path, params, body)
 	if err != nil {
 		return nil, err
 	}
@@ -292,7 +336,7 @@ func (r *BulkResponse) ByAction(action string) []*BulkResponseItem {
 	if r.Items == nil {
 		return nil
 	}
-	items := make([]*BulkResponseItem, 0)
+	var items []*BulkResponseItem
 	for _, item := range r.Items {
 		if result, found := item[action]; found {
 			items = append(items, result)
@@ -307,7 +351,7 @@ func (r *BulkResponse) ById(id string) []*BulkResponseItem {
 	if r.Items == nil {
 		return nil
 	}
-	items := make([]*BulkResponseItem, 0)
+	var items []*BulkResponseItem
 	for _, item := range r.Items {
 		for _, result := range item {
 			if result.Id == id {
@@ -324,7 +368,7 @@ func (r *BulkResponse) Failed() []*BulkResponseItem {
 	if r.Items == nil {
 		return nil
 	}
-	errors := make([]*BulkResponseItem, 0)
+	var errors []*BulkResponseItem
 	for _, item := range r.Items {
 		for _, result := range item {
 			if !(result.Status >= 200 && result.Status <= 299) {
@@ -341,7 +385,7 @@ func (r *BulkResponse) Succeeded() []*BulkResponseItem {
 	if r.Items == nil {
 		return nil
 	}
-	succeeded := make([]*BulkResponseItem, 0)
+	var succeeded []*BulkResponseItem
 	for _, item := range r.Items {
 		for _, result := range item {
 			if result.Status >= 200 && result.Status <= 299 {

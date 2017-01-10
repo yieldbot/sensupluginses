@@ -9,7 +9,9 @@ import (
 	"net/url"
 	"strings"
 
-	"gopkg.in/olivere/elastic.v3/uritemplates"
+	"golang.org/x/net/context"
+
+	"gopkg.in/olivere/elastic.v5/uritemplates"
 )
 
 // TasksListService retrieves the list of currently executing tasks
@@ -142,7 +144,7 @@ func (s *TasksListService) Validate() error {
 }
 
 // Do executes the operation.
-func (s *TasksListService) Do() (*TasksListResponse, error) {
+func (s *TasksListService) Do(ctx context.Context) (*TasksListResponse, error) {
 	// Check pre-conditions
 	if err := s.Validate(); err != nil {
 		return nil, err
@@ -155,7 +157,7 @@ func (s *TasksListService) Do() (*TasksListResponse, error) {
 	}
 
 	// Get HTTP response
-	res, err := s.client.PerformRequest("GET", path, params, nil)
+	res, err := s.client.PerformRequest(ctx, "GET", path, params, nil)
 	if err != nil {
 		return nil, err
 	}

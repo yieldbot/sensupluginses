@@ -8,6 +8,9 @@
 
 package sensuutil
 
+// EnvironmentFile contains environmental details generated during the Chef run by Oahi.
+const EnvironmentFile string = "/etc/sensu/conf.d/monitoring_infra.json"
+
 // MonitoringErrorCodes provides a standard set of error codes to use.
 // Please use the below codes instead of random non-zero so that monitoring can
 // utilize existing maps for alerting and help avoid unnecessary noise.

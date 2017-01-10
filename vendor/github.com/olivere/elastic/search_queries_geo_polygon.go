@@ -1,4 +1,4 @@
-// Copyright 2012-2015 Oliver Eilhard. All rights reserved.
+// Copyright 2012-present Oliver Eilhard. All rights reserved.
 // Use of this source code is governed by a MIT-license.
 // See http://olivere.mit-license.org/license.txt for details.
 
@@ -58,7 +58,7 @@ func (q *GeoPolygonQuery) Source() (interface{}, error) {
 	polygon := make(map[string]interface{})
 	params[q.name] = polygon
 
-	points := make([]interface{}, 0)
+	var points []interface{}
 	for _, point := range q.points {
 		points = append(points, point.Source())
 	}

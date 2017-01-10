@@ -27,7 +27,7 @@ import (
 	"github.com/olivere/elastic"
 	"github.com/spf13/cobra"
 	"github.com/yieldbot/sensuplugin/sensuhandler"
-	"github.com/yieldbot/sensupluginses/version"
+	//"github.com/yieldbot/sensupluginses/version"
 )
 
 // elasticsearch endpoint configuration
@@ -64,7 +64,7 @@ var handlerElasticsearchStatusCmd = &cobra.Command{
 			syslogLog.WithFields(logrus.Fields{
 				"check":   "sensupluginses",
 				"client":  host,
-				"version": version.AppVersion(),
+				//"version": version.AppVersion(),
 				"error":   err,
 				"esHost":  esHost,
 				"esPort":  esPort,
@@ -79,7 +79,7 @@ var handlerElasticsearchStatusCmd = &cobra.Command{
 				syslogLog.WithFields(logrus.Fields{
 					"check":   "sensupluginses",
 					"client":  host,
-					"version": version.AppVersion(),
+					//"version": version.AppVersion(),
 					"error":   err,
 					"esIndex": esIndex,
 				}).Error(`Could not create an elasticsearch index`)
@@ -112,7 +112,7 @@ var handlerElasticsearchStatusCmd = &cobra.Command{
 			syslogLog.WithFields(logrus.Fields{
 				"check":   "sensupluginses",
 				"client":  host,
-				"version": version.AppVersion(),
+				//"version": version.AppVersion(),
 				"error":   err,
 				"esHost":  esHost,
 				"esPort":  esPort,
@@ -126,7 +126,7 @@ var handlerElasticsearchStatusCmd = &cobra.Command{
 		syslogLog.WithFields(logrus.Fields{
 			"check":   "sensupluginses",
 			"client":  host,
-			"version": version.AppVersion(),
+			//"version": version.AppVersion(),
 			"esHost":  esHost,
 			"esPort":  esPort,
 			"esIndex": esIndex,

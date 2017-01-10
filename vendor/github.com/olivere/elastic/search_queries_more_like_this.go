@@ -1,4 +1,4 @@
-// Copyright 2012-2015 Oliver Eilhard. All rights reserved.
+// Copyright 2012-present Oliver Eilhard. All rights reserved.
 // Use of this source code is governed by a MIT-license.
 // See http://olivere.mit-license.org/license.txt for details.
 
@@ -214,7 +214,7 @@ func (q *MoreLikeThisQuery) Source() (interface{}, error) {
 		params["fields"] = q.fields
 	}
 
-	likes := make([]interface{}, 0)
+	var likes []interface{}
 	for _, doc := range q.docs {
 		src, err := doc.Source()
 		if err != nil {
@@ -225,7 +225,7 @@ func (q *MoreLikeThisQuery) Source() (interface{}, error) {
 	params["like"] = likes
 
 	if len(q.unlikeDocs) > 0 {
-		dontLikes := make([]interface{}, 0)
+		var dontLikes []interface{}
 		for _, doc := range q.unlikeDocs {
 			src, err := doc.Source()
 			if err != nil {

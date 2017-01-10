@@ -1,4 +1,4 @@
-// Copyright 2012-2015 Oliver Eilhard. All rights reserved.
+// Copyright 2012-present Oliver Eilhard. All rights reserved.
 // Use of this source code is governed by a MIT-license.
 // See http://olivere.mit-license.org/license.txt for details.
 
@@ -135,7 +135,7 @@ func (q *SimpleQueryStringQuery) Source() (interface{}, error) {
 	query["query"] = q.queryText
 
 	if len(q.fields) > 0 {
-		fields := make([]string, 0)
+		var fields []string
 		for _, field := range q.fields {
 			if boost, found := q.fieldBoosts[field]; found {
 				if boost != nil {

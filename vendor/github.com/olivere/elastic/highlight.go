@@ -1,4 +1,4 @@
-// Copyright 2012-2015 Oliver Eilhard. All rights reserved.
+// Copyright 2012-present Oliver Eilhard. All rights reserved.
 // Use of this source code is governed by a MIT-license.
 // See http://olivere.mit-license.org/license.txt for details.
 
@@ -211,7 +211,7 @@ func (hl *Highlight) Source() (interface{}, error) {
 	if hl.fields != nil && len(hl.fields) > 0 {
 		if hl.useExplicitFieldOrder {
 			// Use a slice for the fields
-			fields := make([]map[string]interface{}, 0)
+			var fields []map[string]interface{}
 			for _, field := range hl.fields {
 				src, err := field.Source()
 				if err != nil {

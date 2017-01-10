@@ -1,4 +1,4 @@
-// Copyright 2012-2015 Oliver Eilhard. All rights reserved.
+// Copyright 2012-present Oliver Eilhard. All rights reserved.
 // Use of this source code is governed by a MIT-license.
 // See http://olivere.mit-license.org/license.txt for details.
 
@@ -9,7 +9,9 @@ import (
 	"net/url"
 	"strings"
 
-	"gopkg.in/olivere/elastic.v3/uritemplates"
+	"golang.org/x/net/context"
+
+	"gopkg.in/olivere/elastic.v5/uritemplates"
 )
 
 // IndicesPutMappingService allows to register specific mapping definition
@@ -180,7 +182,7 @@ func (s *IndicesPutMappingService) Validate() error {
 }
 
 // Do executes the operation.
-func (s *IndicesPutMappingService) Do() (*PutMappingResponse, error) {
+func (s *IndicesPutMappingService) Do(ctx context.Context) (*PutMappingResponse, error) {
 	// Check pre-conditions
 	if err := s.Validate(); err != nil {
 		return nil, err
@@ -201,7 +203,7 @@ func (s *IndicesPutMappingService) Do() (*PutMappingResponse, error) {
 	}
 
 	// Get HTTP response
-	res, err := s.client.PerformRequest("PUT", path, params, body)
+	res, err := s.client.PerformRequest(ctx, "PUT", path, params, body)
 	if err != nil {
 		return nil, err
 	}

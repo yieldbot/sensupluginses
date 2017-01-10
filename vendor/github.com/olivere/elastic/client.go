@@ -17,11 +17,14 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"golang.org/x/net/context"
+	"golang.org/x/net/context/ctxhttp"
 )
 
 const (
 	// Version is the current version of Elastic.
-	Version = "3.0.40"
+	Version = "5.0.17"
 
 	// DefaultUrl is the default endpoint of Elasticsearch on the local machine.
 	// It is used e.g. when initializing a new Client without a specific URL.
@@ -108,31 +111,32 @@ type Client struct {
 	conns   []*conn      // all connections
 	cindex  int          // index into conns
 
-	mu                        sync.RWMutex  // guards the next block
-	urls                      []string      // set of URLs passed initially to the client
-	running                   bool          // true if the client's background processes are running
-	errorlog                  Logger        // error log for critical messages
-	infolog                   Logger        // information log for e.g. response times
-	tracelog                  Logger        // trace log for debugging
-	maxRetries                int           // max. number of retries
-	scheme                    string        // http or https
-	healthcheckEnabled        bool          // healthchecks enabled or disabled
-	healthcheckTimeoutStartup time.Duration // time the healthcheck waits for a response from Elasticsearch on startup
-	healthcheckTimeout        time.Duration // time the healthcheck waits for a response from Elasticsearch
-	healthcheckInterval       time.Duration // interval between healthchecks
-	healthcheckStop           chan bool     // notify healthchecker to stop, and notify back
-	snifferEnabled            bool          // sniffer enabled or disabled
-	snifferTimeoutStartup     time.Duration // time the sniffer waits for a response from nodes info API on startup
-	snifferTimeout            time.Duration // time the sniffer waits for a response from nodes info API
-	snifferInterval           time.Duration // interval between sniffing
-	snifferStop               chan bool     // notify sniffer to stop, and notify back
-	decoder                   Decoder       // used to decode data sent from Elasticsearch
-	basicAuth                 bool          // indicates whether to send HTTP Basic Auth credentials
-	basicAuthUsername         string        // username for HTTP Basic Auth
-	basicAuthPassword         string        // password for HTTP Basic Auth
-	sendGetBodyAs             string        // override for when sending a GET with a body
-	requiredPlugins           []string      // list of required plugins
-	gzipEnabled               bool          // gzip compression enabled or disabled (default)
+	mu                        sync.RWMutex    // guards the next block
+	urls                      []string        // set of URLs passed initially to the client
+	running                   bool            // true if the client's background processes are running
+	errorlog                  Logger          // error log for critical messages
+	infolog                   Logger          // information log for e.g. response times
+	tracelog                  Logger          // trace log for debugging
+	maxRetries                int             // max. number of retries
+	scheme                    string          // http or https
+	healthcheckEnabled        bool            // healthchecks enabled or disabled
+	healthcheckTimeoutStartup time.Duration   // time the healthcheck waits for a response from Elasticsearch on startup
+	healthcheckTimeout        time.Duration   // time the healthcheck waits for a response from Elasticsearch
+	healthcheckInterval       time.Duration   // interval between healthchecks
+	healthcheckStop           chan bool       // notify healthchecker to stop, and notify back
+	snifferEnabled            bool            // sniffer enabled or disabled
+	snifferTimeoutStartup     time.Duration   // time the sniffer waits for a response from nodes info API on startup
+	snifferTimeout            time.Duration   // time the sniffer waits for a response from nodes info API
+	snifferInterval           time.Duration   // interval between sniffing
+	snifferCallback           SnifferCallback // callback to modify the sniffing decision
+	snifferStop               chan bool       // notify sniffer to stop, and notify back
+	decoder                   Decoder         // used to decode data sent from Elasticsearch
+	basicAuth                 bool            // indicates whether to send HTTP Basic Auth credentials
+	basicAuthUsername         string          // username for HTTP Basic Auth
+	basicAuthPassword         string          // password for HTTP Basic Auth
+	sendGetBodyAs             string          // override for when sending a GET with a body
+	requiredPlugins           []string        // list of required plugins
+	gzipEnabled               bool            // gzip compression enabled or disabled (default)
 }
 
 // NewClient creates a new client to work with Elasticsearch.
@@ -201,6 +205,7 @@ func NewClient(options ...ClientOptionFunc) (*Client, error) {
 		snifferTimeoutStartup:     DefaultSnifferTimeoutStartup,
 		snifferTimeout:            DefaultSnifferTimeout,
 		snifferInterval:           DefaultSnifferInterval,
+		snifferCallback:           nopSnifferCallback,
 		snifferStop:               make(chan bool),
 		sendGetBodyAs:             DefaultSendGetBodyAs,
 		gzipEnabled:               DefaultGzipEnabled,
@@ -303,6 +308,7 @@ func NewSimpleClient(options ...ClientOptionFunc) (*Client, error) {
 		snifferTimeoutStartup:     off,
 		snifferTimeout:            off,
 		snifferInterval:           off,
+		snifferCallback:           nopSnifferCallback,
 		snifferStop:               make(chan bool),
 		sendGetBodyAs:             DefaultSendGetBodyAs,
 		gzipEnabled:               DefaultGzipEnabled,
@@ -434,6 +440,27 @@ func SetSnifferInterval(interval time.Duration) ClientOptionFunc {
 	}
 }
 
+// SnifferCallback defines the protocol for sniffing decisions.
+type SnifferCallback func(*NodesInfoNode) bool
+
+// nopSnifferCallback is the default sniffer callback: It accepts
+// all nodes the sniffer finds.
+var nopSnifferCallback = func(*NodesInfoNode) bool { return true }
+
+// SetSnifferCallback allows the caller to modify sniffer decisions.
+// When setting the callback, the given SnifferCallback is called for
+// each (healthy) node found during the sniffing process.
+// If the callback returns false, the node is ignored: No requests
+// are routed to it.
+func SetSnifferCallback(f SnifferCallback) ClientOptionFunc {
+	return func(c *Client) error {
+		if f != nil {
+			c.snifferCallback = f
+		}
+		return nil
+	}
+}
+
 // SetHealthcheck enables or disables healthchecks (enabled by default).
 func SetHealthcheck(enabled bool) ClientOptionFunc {
 	return func(c *Client) error {
@@ -546,7 +573,7 @@ func SetTraceLog(logger Logger) ClientOptionFunc {
 	}
 }
 
-// SendGetBodyAs specifies the HTTP method to use when sending a GET request
+// SetSendGetBodyAs specifies the HTTP method to use when sending a GET request
 // with a body. It is GET by default.
 func SetSendGetBodyAs(httpMethod string) ClientOptionFunc {
 	return func(c *Client) error {
@@ -681,9 +708,10 @@ func (c *Client) dumpResponse(resp *http.Response) {
 func (c *Client) sniffer() {
 	c.mu.RLock()
 	timeout := c.snifferTimeout
+	interval := c.snifferInterval
 	c.mu.RUnlock()
 
-	ticker := time.NewTicker(timeout)
+	ticker := time.NewTicker(interval)
 	defer ticker.Stop()
 
 	for {
@@ -711,8 +739,8 @@ func (c *Client) sniff(timeout time.Duration) error {
 	}
 
 	// Use all available URLs provided to sniff the cluster.
+	var urls []string
 	urlsMap := make(map[string]bool)
-	urls := make([]string, 0)
 
 	// Add all URLs provided on startup
 	for _, url := range c.urls {
@@ -763,7 +791,7 @@ func (c *Client) sniff(timeout time.Duration) error {
 // from the result of calling Nodes Info API. Otherwise, an empty array
 // is returned.
 func (c *Client) sniffNode(url string) []*conn {
-	nodes := make([]*conn, 0)
+	var nodes []*conn
 
 	// Call the Nodes Info API at /_nodes/http
 	req, err := NewRequest("GET", url+"/_nodes/http")
@@ -792,19 +820,13 @@ func (c *Client) sniffNode(url string) []*conn {
 	var info NodesInfoResponse
 	if err := json.NewDecoder(res.Body).Decode(&info); err == nil {
 		if len(info.Nodes) > 0 {
-			switch c.scheme {
-			case "https":
-				for nodeID, node := range info.Nodes {
-					url := c.extractHostname("https", node.HTTPSAddress)
-					if url != "" {
-						nodes = append(nodes, newConn(nodeID, url))
-					}
-				}
-			default:
-				for nodeID, node := range info.Nodes {
-					url := c.extractHostname("http", node.HTTPAddress)
-					if url != "" {
-						nodes = append(nodes, newConn(nodeID, url))
+			for nodeID, node := range info.Nodes {
+				if c.snifferCallback(node) {
+					if node.HTTP != nil && len(node.HTTP.PublishAddress) > 0 {
+						url := c.extractHostname(c.scheme, node.HTTP.PublishAddress)
+						if url != "" {
+							nodes = append(nodes, newConn(nodeID, url))
+						}
 					}
 				}
 			}
@@ -839,11 +861,10 @@ func (c *Client) extractHostname(scheme, address string) string {
 func (c *Client) updateConns(conns []*conn) {
 	c.connsMu.Lock()
 
-	newConns := make([]*conn, 0)
-
 	// Build up new connections:
 	// If we find an existing connection, use that (including no. of failures etc.).
 	// If we find a new connection, add it.
+	var newConns []*conn
 	for _, conn := range conns {
 		var found bool
 		for _, oldConn := range c.conns {
@@ -870,9 +891,10 @@ func (c *Client) updateConns(conns []*conn) {
 func (c *Client) healthchecker() {
 	c.mu.RLock()
 	timeout := c.healthcheckTimeout
+	interval := c.healthcheckInterval
 	c.mu.RUnlock()
 
-	ticker := time.NewTicker(timeout)
+	ticker := time.NewTicker(interval)
 	defer ticker.Stop()
 
 	for {
@@ -906,34 +928,52 @@ func (c *Client) healthcheck(timeout time.Duration, force bool) {
 	conns := c.conns
 	c.connsMu.RUnlock()
 
-	timeoutInMillis := int64(timeout / time.Millisecond)
-
 	for _, conn := range conns {
-		params := make(url.Values)
-		params.Set("timeout", fmt.Sprintf("%dms", timeoutInMillis))
-		req, err := NewRequest("HEAD", conn.URL()+"/?"+params.Encode())
-		if err == nil {
+		// Run the HEAD request against ES with a timeout
+		ctx, cancel := context.WithTimeout(context.Background(), timeout)
+		defer cancel()
+
+		// Goroutine executes the HTTP request, returns an error and sets status
+		var status int
+		errc := make(chan error, 1)
+		go func(url string) {
+			req, err := NewRequest("HEAD", url)
+			if err != nil {
+				errc <- err
+				return
+			}
 			if basicAuth {
 				req.SetBasicAuth(basicAuthUsername, basicAuthPassword)
 			}
 			res, err := c.c.Do((*http.Request)(req))
-			if err == nil {
+			if res != nil {
+				status = res.StatusCode
 				if res.Body != nil {
-					defer res.Body.Close()
+					res.Body.Close()
 				}
-				if res.StatusCode >= 200 && res.StatusCode < 300 {
-					conn.MarkAsAlive()
-				} else {
-					conn.MarkAsDead()
-					c.errorf("elastic: %s is dead [status=%d]", conn.URL(), res.StatusCode)
-				}
-			} else {
-				c.errorf("elastic: %s is dead", conn.URL())
-				conn.MarkAsDead()
 			}
-		} else {
+			errc <- err
+		}(conn.URL())
+
+		// Wait for the Goroutine (or its timeout)
+		select {
+		case <-ctx.Done(): // timeout
 			c.errorf("elastic: %s is dead", conn.URL())
 			conn.MarkAsDead()
+			break
+		case err := <-errc:
+			if err != nil {
+				c.errorf("elastic: %s is dead", conn.URL())
+				conn.MarkAsDead()
+				break
+			}
+			if status >= 200 && status < 300 {
+				conn.MarkAsAlive()
+			} else {
+				conn.MarkAsDead()
+				c.errorf("elastic: %s is dead [status=%d]", conn.URL(), status)
+			}
+			break
 		}
 	}
 }
@@ -987,11 +1027,11 @@ func (c *Client) next() (*conn, error) {
 	i := 0
 	numConns := len(c.conns)
 	for {
-		i += 1
+		i++
 		if i > numConns {
 			break // we visited all conns: they all seem to be dead
 		}
-		c.cindex += 1
+		c.cindex++
 		if c.cindex >= numConns {
 			c.cindex = 0
 		}
@@ -1031,12 +1071,12 @@ func (c *Client) mustActiveConn() error {
 }
 
 // PerformRequest does a HTTP request to Elasticsearch.
-// It returns a response and an error on failure.
+// It returns a response (which might be nil) and an error on failure.
 //
 // Optionally, a list of HTTP error codes to ignore can be passed.
 // This is necessary for services that expect e.g. HTTP status 404 as a
 // valid outcome (Exists, IndicesExists, IndicesTypeExists).
-func (c *Client) PerformRequest(method, path string, params url.Values, body interface{}, ignoreErrors ...int) (*Response, error) {
+func (c *Client) PerformRequest(ctx context.Context, method, path string, params url.Values, body interface{}, ignoreErrors ...int) (*Response, error) {
 	start := time.Now().UTC()
 
 	c.mu.RLock()
@@ -1077,7 +1117,7 @@ func (c *Client) PerformRequest(method, path string, params url.Values, body int
 				// Force a healtcheck as all connections seem to be dead.
 				c.healthcheck(timeout, false)
 			}
-			retries -= 1
+			retries--
 			if retries <= 0 {
 				return nil, err
 			}
@@ -1114,9 +1154,9 @@ func (c *Client) PerformRequest(method, path string, params url.Values, body int
 		c.dumpRequest((*http.Request)(req))
 
 		// Get response
-		res, err := c.c.Do((*http.Request)(req))
+		res, err := ctxhttp.Do(ctx, c.c, (*http.Request)(req))
 		if err != nil {
-			retries -= 1
+			retries--
 			if retries <= 0 {
 				c.errorf("elastic: %s is dead", conn.URL())
 				conn.MarkAsDead()
@@ -1134,7 +1174,9 @@ func (c *Client) PerformRequest(method, path string, params url.Values, body int
 		// Check for errors
 		if err := checkResponse((*http.Request)(req), res, ignoreErrors...); err != nil {
 			// No retry if request succeeded
-			return nil, err
+			// We still try to return a response.
+			resp, _ = c.newResponse(res)
+			return resp, err
 		}
 
 		// Tracing
@@ -1213,33 +1255,27 @@ func (c *Client) BulkProcessor() *BulkProcessorService {
 	return NewBulkProcessorService(c)
 }
 
-// Reindex returns a service that will reindex documents from a source
-// index into a target index.
-//
-// Notice that this Reindexer is an Elastic-specific solution that pre-dated
-// the Reindex API introduced in Elasticsearch 2.3.0 (see ReindexTask).
-//
-// See http://www.elastic.co/guide/en/elasticsearch/guide/current/reindex.html
-// for more information about reindexing.
-func (c *Client) Reindex(sourceIndex, targetIndex string) *Reindexer {
-	return NewReindexer(c, sourceIndex, CopyToTargetIndex(targetIndex))
-}
-
-// ReindexTask copies data from a source index into a destination index.
-//
-// The Reindex API has been introduced in Elasticsearch 2.3.0. Notice that
-// there is a Elastic-specific Reindexer that pre-dates the Reindex API from
-// Elasticsearch. If you rely on that, use the ReindexerService via
-// Client.Reindex.
+// Reindex copies data from a source index into a destination index.
 //
 // See https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-reindex.html
 // for details on the Reindex API.
-func (c *Client) ReindexTask() *ReindexService {
+func (c *Client) Reindex() *ReindexService {
 	return NewReindexService(c)
 }
 
-// TODO Term Vectors
-// TODO Multi termvectors API
+// TermVectors returns information and statistics on terms in the fields
+// of a particular document.
+func (c *Client) TermVectors(index, typ string) *TermvectorsService {
+	builder := NewTermvectorsService(c)
+	builder = builder.Index(index).Type(typ)
+	return builder
+}
+
+// MultiTermVectors returns information and statistics on terms in the fields
+// of multiple documents.
+func (c *Client) MultiTermVectors() *MultiTermvectorService {
+	return NewMultiTermvectorService(c)
+}
 
 // -- Search APIs --
 
@@ -1268,12 +1304,6 @@ func (c *Client) Explain(index, typ, id string) *ExplainService {
 	return NewExplainService(c).Index(index).Type(typ).Id(id)
 }
 
-// Percolate allows to send a document and return matching queries.
-// See http://www.elastic.co/guide/en/elasticsearch/reference/current/search-percolate.html.
-func (c *Client) Percolate() *PercolateService {
-	return NewPercolateService(c)
-}
-
 // TODO Search Template
 // TODO Search Shards API
 // TODO Search Exists API
@@ -1289,15 +1319,8 @@ func (c *Client) Exists() *ExistsService {
 	return NewExistsService(c)
 }
 
-// Scan through documents. Use this to iterate inside a server process
-// where the results will be processed without returning them to a client.
-func (c *Client) Scan(indices ...string) *ScanService {
-	return NewScanService(c).Index(indices...)
-}
-
 // Scroll through documents. Use this to efficiently scroll through results
-// while returning the results to a client. Use Scan when you don't need
-// to return requests to a client (i.e. not paginating via request/response).
+// while returning the results to a client.
 func (c *Client) Scroll(indices ...string) *ScrollService {
 	return NewScrollService(c).Index(indices...)
 }
@@ -1322,6 +1345,17 @@ func (c *Client) DeleteIndex(indices ...string) *IndicesDeleteService {
 // IndexExists allows to check if an index exists.
 func (c *Client) IndexExists(indices ...string) *IndicesExistsService {
 	return NewIndicesExistsService(c).Index(indices)
+}
+
+// ShrinkIndex returns a service to shrink one index into another.
+func (c *Client) ShrinkIndex(source, target string) *IndicesShrinkService {
+	return NewIndicesShrinkService(c).Source(source).Target(target)
+}
+
+// RolloverIndex rolls an alias over to a new index when the existing index
+// is considered to be too large or too old.
+func (c *Client) RolloverIndex(alias string) *IndicesRolloverService {
+	return NewIndicesRolloverService(c).Alias(alias)
 }
 
 // TypeExists allows to check if one or more types exist in one or more indices.
@@ -1361,10 +1395,10 @@ func (c *Client) IndexPutSettings(indices ...string) *IndicesPutSettingsService 
 	return NewIndicesPutSettingsService(c).Index(indices...)
 }
 
-// Optimize asks Elasticsearch to optimize one or more indices.
-// Optimize is deprecated as of Elasticsearch 2.1 and replaced by Forcemerge.
-func (c *Client) Optimize(indices ...string) *OptimizeService {
-	return NewOptimizeService(c).Index(indices...)
+// IndexAnalyze performs the analysis process on a text and returns the
+// token breakdown of the text.
+func (c *Client) IndexAnalyze() *IndicesAnalyzeService {
+	return NewIndicesAnalyzeService(c)
 }
 
 // Forcemerge optimizes one or more indices.
@@ -1446,21 +1480,6 @@ func (c *Client) PutMapping() *IndicesPutMappingService {
 	return NewIndicesPutMappingService(c)
 }
 
-// GetWarmer gets one or more warmers by name.
-func (c *Client) GetWarmer() *IndicesGetWarmerService {
-	return NewIndicesGetWarmerService(c)
-}
-
-// PutWarmer registers a warmer.
-func (c *Client) PutWarmer() *IndicesPutWarmerService {
-	return NewIndicesPutWarmerService(c)
-}
-
-// DeleteWarmer deletes one or more warmers.
-func (c *Client) DeleteWarmer() *IndicesDeleteWarmerService {
-	return NewIndicesDeleteWarmerService(c)
-}
-
 // -- cat APIs --
 
 // TODO cat aliases
@@ -1477,6 +1496,30 @@ func (c *Client) DeleteWarmer() *IndicesDeleteWarmerService {
 // TODO cat thread pool
 // TODO cat shards
 // TODO cat segments
+
+// -- Ingest APIs --
+
+// IngestPutPipeline adds pipelines and updates existing pipelines in
+// the cluster.
+func (c *Client) IngestPutPipeline(id string) *IngestPutPipelineService {
+	return NewIngestPutPipelineService(c).Id(id)
+}
+
+// IngestGetPipeline returns pipelines based on ID.
+func (c *Client) IngestGetPipeline(ids ...string) *IngestGetPipelineService {
+	return NewIngestGetPipelineService(c).Id(ids...)
+}
+
+// IngestDeletePipeline deletes a pipeline by ID.
+func (c *Client) IngestDeletePipeline(id string) *IngestDeletePipelineService {
+	return NewIngestDeletePipelineService(c).Id(id)
+}
+
+// IngestSimulatePipeline executes a specific pipeline against the set of
+// documents provided in the body of the request.
+func (c *Client) IngestSimulatePipeline() *IngestSimulatePipelineService {
+	return NewIngestSimulatePipelineService(c)
+}
 
 // -- Cluster APIs --
 
@@ -1498,6 +1541,11 @@ func (c *Client) ClusterStats() *ClusterStatsService {
 // NodesInfo retrieves one or more or all of the cluster nodes information.
 func (c *Client) NodesInfo() *NodesInfoService {
 	return NewNodesInfoService(c)
+}
+
+// NodesStats retrieves one or more or all of the cluster nodes statistics.
+func (c *Client) NodesStats() *NodesStatsService {
+	return NewNodesStatsService(c)
 }
 
 // TasksCancel cancels tasks running on the specified nodes.
@@ -1533,7 +1581,7 @@ func (c *Client) TasksList() *TasksListService {
 // ElasticsearchVersion returns the version number of Elasticsearch
 // running on the given URL.
 func (c *Client) ElasticsearchVersion(url string) (string, error) {
-	res, _, err := c.Ping(url).Do()
+	res, _, err := c.Ping(url).Do(context.Background())
 	if err != nil {
 		return "", err
 	}
@@ -1542,12 +1590,12 @@ func (c *Client) ElasticsearchVersion(url string) (string, error) {
 
 // IndexNames returns the names of all indices in the cluster.
 func (c *Client) IndexNames() ([]string, error) {
-	res, err := c.IndexGetSettings().Index("_all").Do()
+	res, err := c.IndexGetSettings().Index("_all").Do(context.Background())
 	if err != nil {
 		return nil, err
 	}
 	var names []string
-	for name, _ := range res {
+	for name := range res {
 		names = append(names, name)
 	}
 	return names, nil
@@ -1569,7 +1617,7 @@ func (c *Client) Ping(url string) *PingService {
 // If the cluster will have the given state within the timeout, nil is returned.
 // If the request timed out, ErrTimeout is returned.
 func (c *Client) WaitForStatus(status string, timeout string) error {
-	health, err := c.ClusterHealth().WaitForStatus(status).Timeout(timeout).Do()
+	health, err := c.ClusterHealth().WaitForStatus(status).Timeout(timeout).Do(context.Background())
 	if err != nil {
 		return err
 	}
@@ -1589,12 +1637,4 @@ func (c *Client) WaitForGreenStatus(timeout string) error {
 // See WaitForStatus for more details.
 func (c *Client) WaitForYellowStatus(timeout string) error {
 	return c.WaitForStatus("yellow", timeout)
-}
-
-// TermVectors returns information and statistics on terms in the fields
-// of a particular document.
-func (c *Client) TermVectors(index, typ string) *TermvectorsService {
-	builder := NewTermvectorsService(c)
-	builder = builder.Index(index).Type(typ)
-	return builder
 }

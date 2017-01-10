@@ -5,8 +5,8 @@ SHELL = /bin/sh
 
 .PHONY: all build clean pre-build version
 
-version_file = "./version/version.go"
-# version := $(shell cat $(version_file))
+version_file = "VERSION"
+version := $(shell cat $(version_file))
 
 #EXTLDFLAGS=-linkmode external -X main.version $(version)
 #	will set the variable 'version' in the 'main' package to the value in version
@@ -181,11 +181,8 @@ test:
 
 version:
 	@if [ -e $(version_file) ]; then \
-		sed -i.bak 's/package version/package main/' $(version_file); \
-        		ver=`go run $(version_file)`; \
-        		sed -i.bak 's/package main/package version/' $(version_file); \
-        		rm "$(version_file).bak"; \
-        		echo "$$ver"; \
+		ver=`cat $(version_file)`; \
+		echo "$$ver"; \
 	else \
 		echo "No version file found"; \
 		exit 1; \
@@ -193,7 +190,12 @@ version:
 
 version-bump:
 	@if [ -e $(version_file) ]; then \
-		perl -i -pe 's/\d+/$$&+($$&>0)/e if /'"$(version_file_delimiter)"'/' $(version_file); \
+		VER=`cat $(version_file)`; \
+		MAJOR=`echo "$$VER" | cut -d. -f 1`; \
+		MINOR=`echo "$$VER" | cut -d. -f 2`; \
+		PATCH=`echo "$$VER" | cut -d. -f 3`; \
+		NEW_PATCH=`echo "$$(( $$PATCH + 1 ))"`; \
+		echo "$$MAJOR.$$MINOR.$$NEW_PATCH" > $(version_file); \
 	else \
 		echo "No version file found"; \
 		exit 1; \

@@ -1,4 +1,4 @@
-// Copyright 2012-2015 Oliver Eilhard. All rights reserved.
+// Copyright 2012-present Oliver Eilhard. All rights reserved.
 // Use of this source code is governed by a MIT-license.
 // See http://olivere.mit-license.org/license.txt for details.
 
@@ -10,7 +10,9 @@ import (
 	"net/url"
 	"strings"
 
-	"gopkg.in/olivere/elastic.v3/uritemplates"
+	"golang.org/x/net/context"
+
+	"gopkg.in/olivere/elastic.v5/uritemplates"
 )
 
 // IndicesExistsTypeService checks if one or more types exist in one or more indices.
@@ -32,8 +34,6 @@ type IndicesExistsTypeService struct {
 func NewIndicesExistsTypeService(client *Client) *IndicesExistsTypeService {
 	return &IndicesExistsTypeService{
 		client: client,
-		index:  make([]string, 0),
-		typ:    make([]string, 0),
 	}
 }
 
@@ -87,7 +87,7 @@ func (s *IndicesExistsTypeService) Pretty(pretty bool) *IndicesExistsTypeService
 // buildURL builds the URL for the operation.
 func (s *IndicesExistsTypeService) buildURL() (string, url.Values, error) {
 	// Build URL
-	path, err := uritemplates.Expand("/{index}/{type}", map[string]string{
+	path, err := uritemplates.Expand("/{index}/_mapping/{type}", map[string]string{
 		"index": strings.Join(s.index, ","),
 		"type":  strings.Join(s.typ, ","),
 	})
@@ -131,7 +131,7 @@ func (s *IndicesExistsTypeService) Validate() error {
 }
 
 // Do executes the operation.
-func (s *IndicesExistsTypeService) Do() (bool, error) {
+func (s *IndicesExistsTypeService) Do(ctx context.Context) (bool, error) {
 	// Check pre-conditions
 	if err := s.Validate(); err != nil {
 		return false, err
@@ -144,7 +144,7 @@ func (s *IndicesExistsTypeService) Do() (bool, error) {
 	}
 
 	// Get HTTP response
-	res, err := s.client.PerformRequest("HEAD", path, params, nil, 404)
+	res, err := s.client.PerformRequest(ctx, "HEAD", path, params, nil, 404)
 	if err != nil {
 		return false, err
 	}

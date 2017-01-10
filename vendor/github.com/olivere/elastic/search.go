@@ -1,4 +1,4 @@
-// Copyright 2012-2015 Oliver Eilhard. All rights reserved.
+// Copyright 2012-present Oliver Eilhard. All rights reserved.
 // Use of this source code is governed by a MIT-license.
 // See http://olivere.mit-license.org/license.txt for details.
 
@@ -11,7 +11,9 @@ import (
 	"reflect"
 	"strings"
 
-	"gopkg.in/olivere/elastic.v3/uritemplates"
+	"golang.org/x/net/context"
+
+	"gopkg.in/olivere/elastic.v5/uritemplates"
 )
 
 // Search for documents in Elasticsearch.
@@ -25,6 +27,7 @@ type SearchService struct {
 	typ               []string
 	routing           string
 	preference        string
+	requestCache      *bool
 	ignoreUnavailable *bool
 	allowNoIndices    *bool
 	expandWildcards   string
@@ -109,11 +112,19 @@ func (s *SearchService) Routing(routings ...string) *SearchService {
 }
 
 // Preference sets the preference to execute the search. Defaults to
-// randomize across shards. Can be set to "_local" to prefer local shards,
-// "_primary" to execute on primary shards only, or a custom value which
-// guarantees that the same order will be used across different requests.
+// randomize across shards ("random"). Can be set to "_local" to prefer
+// local shards, "_primary" to execute on primary shards only,
+// or a custom value which guarantees that the same order will be used
+// across different requests.
 func (s *SearchService) Preference(preference string) *SearchService {
 	s.preference = preference
+	return s
+}
+
+// RequestCache indicates whether the cache should be used for this
+// request or not, defaults to index level setting.
+func (s *SearchService) RequestCache(requestCache bool) *SearchService {
+	s.requestCache = &requestCache
 	return s
 }
 
@@ -219,25 +230,25 @@ func (s *SearchService) SortBy(sorter ...Sorter) *SearchService {
 	return s
 }
 
-// NoFields indicates that no fields should be loaded, resulting in only
+// NoStoredFields indicates that no stored fields should be loaded, resulting in only
 // id and type to be returned per field.
-func (s *SearchService) NoFields() *SearchService {
-	s.searchSource = s.searchSource.NoFields()
+func (s *SearchService) NoStoredFields() *SearchService {
+	s.searchSource = s.searchSource.NoStoredFields()
 	return s
 }
 
-// Field adds a single field to load and return (note, must be stored) as
+// StoredField adds a single field to load and return (note, must be stored) as
 // part of the search request. If none are specified, the source of the
 // document will be returned.
-func (s *SearchService) Field(fieldName string) *SearchService {
-	s.searchSource = s.searchSource.Field(fieldName)
+func (s *SearchService) StoredField(fieldName string) *SearchService {
+	s.searchSource = s.searchSource.StoredField(fieldName)
 	return s
 }
 
-// Fields	sets the fields to load and return as part of the search request.
+// StoredFields	sets the fields to load and return as part of the search request.
 // If none are specified, the source of the document will be returned.
-func (s *SearchService) Fields(fields ...string) *SearchService {
-	s.searchSource = s.searchSource.Fields(fields...)
+func (s *SearchService) StoredFields(fields ...string) *SearchService {
+	s.searchSource = s.searchSource.StoredFields(fields...)
 	return s
 }
 
@@ -299,6 +310,12 @@ func (s *SearchService) buildURL() (string, url.Values, error) {
 	if s.routing != "" {
 		params.Set("routing", s.routing)
 	}
+	if s.preference != "" {
+		params.Set("preference", s.preference)
+	}
+	if s.requestCache != nil {
+		params.Set("request_cache", fmt.Sprintf("%v", *s.requestCache))
+	}
 	if s.allowNoIndices != nil {
 		params.Set("allow_no_indices", fmt.Sprintf("%v", *s.allowNoIndices))
 	}
@@ -317,7 +334,7 @@ func (s *SearchService) Validate() error {
 }
 
 // Do executes the search and returns a SearchResult.
-func (s *SearchService) Do() (*SearchResult, error) {
+func (s *SearchService) Do(ctx context.Context) (*SearchResult, error) {
 	// Check pre-conditions
 	if err := s.Validate(); err != nil {
 		return nil, err
@@ -340,7 +357,7 @@ func (s *SearchService) Do() (*SearchResult, error) {
 		}
 		body = src
 	}
-	res, err := s.client.PerformRequest("POST", path, params, body)
+	res, err := s.client.PerformRequest(ctx, "POST", path, params, body)
 	if err != nil {
 		return nil, err
 	}
@@ -382,7 +399,7 @@ func (r *SearchResult) Each(typ reflect.Type) []interface{} {
 	if r.Hits == nil || r.Hits.Hits == nil || len(r.Hits.Hits) == 0 {
 		return nil
 	}
-	slice := make([]interface{}, 0)
+	var slice []interface{}
 	for _, hit := range r.Hits.Hits {
 		v := reflect.New(typ).Elem()
 		if err := json.Unmarshal(*hit.Source, v.Addr().Interface()); err == nil {
@@ -406,15 +423,13 @@ type SearchHit struct {
 	Type           string                         `json:"_type"`           // type meta field
 	Id             string                         `json:"_id"`             // external or internal
 	Uid            string                         `json:"_uid"`            // uid meta field (see MapperService.java for all meta fields)
-	Timestamp      int64                          `json:"_timestamp"`      // timestamp meta field
-	TTL            int64                          `json:"_ttl"`            // ttl meta field
 	Routing        string                         `json:"_routing"`        // routing meta field
 	Parent         string                         `json:"_parent"`         // parent meta field
 	Version        *int64                         `json:"_version"`        // version number, when Version is set to true in SearchService
 	Sort           []interface{}                  `json:"sort"`            // sort information
 	Highlight      SearchHitHighlight             `json:"highlight"`       // highlighter information
 	Source         *json.RawMessage               `json:"_source"`         // stored document source
-	Fields         map[string]interface{}         `json:"fields"`          // returned fields
+	Fields         map[string]interface{}         `json:"fields"`          // returned (stored) fields
 	Explanation    *SearchExplanation             `json:"_explanation"`    // explains how the score was computed
 	MatchedQueries []string                       `json:"matched_queries"` // matched queries
 	InnerHits      map[string]*SearchHitInnerHits `json:"inner_hits"`      // inner hits with ES >= 1.5.0
@@ -455,12 +470,12 @@ type SearchSuggestion struct {
 // SearchSuggestionOption is an option of a SearchSuggestion.
 // See http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/search-suggesters.html.
 type SearchSuggestionOption struct {
-	Text         string      `json:"text"`
-	Highlighted  string      `json:"highlighted"`
-	Score        float64     `json:"score"`
-	CollateMatch bool        `json:"collate_match"`
-	Freq         int         `json:"freq"` // deprecated in 2.x
-	Payload      interface{} `json:"payload"`
+	Text   string           `json:"text"`
+	Index  string           `json:"_index"`
+	Type   string           `json:"_type"`
+	Id     string           `json:"_id"`
+	Score  float64          `json:"_score"`
+	Source *json.RawMessage `json:"_source"`
 }
 
 // Aggregations (see search_aggs.go)
